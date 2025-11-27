@@ -1,0 +1,11 @@
+pandas
+numpy
+scipy
+scikit-learn
+xgboost
+shap
+phonenumbers
+joblib
+matplotlib
+seaborn
+pyyaml
