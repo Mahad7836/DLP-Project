@@ -98,4 +98,4 @@ while True:
         print(f"Detected Possible PII: {pred_label.upper()}")
     else:
         print("No sensitive information detected.")
-    print("-" * 60)
+   print("-"*60)
