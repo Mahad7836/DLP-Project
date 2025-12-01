@@ -19,7 +19,6 @@ from phonenumbers import PhoneNumberType, PhoneNumberFormat
 # ----------------------------
 
 RND = 42
-DATA_PATH = "hehe.csv"
 CONF_THRESHOLD = 0.65
 ALLOWED_REGIONS = {"PK", "AE", "US", "GB", "DE", "IN"}
 ALLOWED_TYPES = {PhoneNumberType.MOBILE}
@@ -32,7 +31,7 @@ CONTEXT_WORDS = {"call", "phone", "tel", "mobile", "mob", "cell", "whatsapp", "w
 
 # ----------------------------
 
-df = pd.read_csv(DATA_PATH)
+df = pd.read_csv("data\hehe.csv")
 df = df.dropna(subset=['text', 'label'])
 
 def normalize_text(s):
