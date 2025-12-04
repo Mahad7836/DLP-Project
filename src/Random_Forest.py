@@ -136,8 +136,6 @@ print("Accuracy:", accuracy_score(y_te, preds))
 print("\nClassification Report:\n", classification_report(y_te, preds, digits=4))
 print("\nConfusion Matrix:\n", confusion_matrix(y_te, preds))
 
-
-
 # Save artifacts
 
 os.makedirs("artifacts", exist_ok=True)
