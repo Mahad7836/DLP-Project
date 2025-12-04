@@ -31,7 +31,7 @@ CONTEXT_WORDS = {"call", "phone", "tel", "mobile", "mob", "cell", "whatsapp", "w
 
 # ----------------------------
 
-df = pd.read_csv("data\hehe.csv")
+df = pd.read_csv("C:/Users/yashf/Desktop/DLP-Project/data/newdata.csv")
 df = df.dropna(subset=['text', 'label'])
 
 def normalize_text(s):
@@ -135,6 +135,8 @@ print("\n=== RANDOM FOREST PERFORMANCE ===")
 print("Accuracy:", accuracy_score(y_te, preds))
 print("\nClassification Report:\n", classification_report(y_te, preds, digits=4))
 print("\nConfusion Matrix:\n", confusion_matrix(y_te, preds))
+
+
 
 # Save artifacts
 

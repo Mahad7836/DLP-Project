@@ -10,7 +10,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 # Load CSV safely using raw string for the Windows path
-df = pd.read_csv(r"D:\Afeef Bari\GIKI\DLP-Project\data\none.csv")
+df = pd.read_csv(r"data/newdata.csv")
 
 # Drop rows with NaN in either 'text' or 'label' columns
 df = df.dropna(subset=['text', 'label'])  # replace 'label' with your target column name
