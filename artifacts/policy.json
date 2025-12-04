@@ -1,0 +1,19 @@
+{
+  "classes": [
+    "address",
+    "email",
+    "none",
+    "phone"
+  ],
+  "t1": 0.1,
+  "t2": 0.95,
+  "default_region": "PK",
+  "allowed_regions": [
+    "AE",
+    "DE",
+    "GB",
+    "IN",
+    "PK",
+    "US"
+  ]
+}
