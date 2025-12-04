@@ -12,7 +12,7 @@ from phonenumbers import PhoneNumberType, PhoneNumberFormat
 # ----------------------------
 # 1) Load dataset
 # ----------------------------
-df = pd.read_csv('dlp_dataset.csv')  # Columns: 'text', 'label'
+df = pd.read_csv('C:/Users/yashf/Desktop/DLP-Project/data/newdata.csv')  # Columns: 'text', 'label'
 df['text'] = df['text'].astype(str)
 y = df['label'].astype(str)
 
@@ -79,7 +79,7 @@ X = hstack([X_vec, regex_sparse])
 # ----------------------------
 # Stratify only if all classes have >=2 samples
 if df['label'].value_counts().min() >= 2:
-    X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
+    X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.3, random_state=42)
 else:
     X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.3, random_state=42)
 
