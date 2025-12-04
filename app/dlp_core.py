@@ -13,17 +13,12 @@ policy     = json.loads((ART/"policy.json").read_text())
 classes    = policy["classes"]; T1=float(policy["t1"]); T2=float(policy["t2"])
 
 EMAIL_RE   = re.compile(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}')
-CNIC_RE    = re.compile(r'\b\d{5}-\d{7}-\d\b')
-CNIC13_RE  = re.compile(r'\b\d{13}\b')
 ALLOWED_TYPES   = {PhoneNumberType.MOBILE}
 ALLOWED_REGIONS = set(policy.get("allowed_regions", ["PK","AE","US","GB","DE","IN"]))
 DEFAULT_REGION  = policy.get("default_region","PK")
 CONTEXT_WORDS   = {"call","phone","tel","mobile","mob","cell","whatsapp","wa","contact"}
 
 def has_email(s): return int(bool(EMAIL_RE.search(s or "")))
-def has_cnic(s):
-    s=s or ""
-    return int(bool(CNIC_RE.search(s) or CNIC13_RE.search(s)))
 
 def _near_ctx(text,i,j,win=16):
     if not text: return False
