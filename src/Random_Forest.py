@@ -31,7 +31,7 @@ CONTEXT_WORDS = {"call", "phone", "tel", "mobile", "mob", "cell", "whatsapp", "w
 
 # ----------------------------
 
-df = pd.read_csv("data\hehe.csv")
+df = pd.read_csv("C:/Users/yashf/Desktop/DLP-Project/data/newdata.csv")
 df = df.dropna(subset=['text', 'label'])
 
 def normalize_text(s):
