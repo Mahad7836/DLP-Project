@@ -8,11 +8,12 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
 import phonenumbers
 from phonenumbers import PhoneNumberType, PhoneNumberFormat
+from sklearn.metrics import confusion_matrix
 
 # ----------------------------
 # 1) Load dataset
 # ----------------------------
-df = pd.read_csv('C:/Users/yashf/Desktop/DLP-Project/data/newdata.csv')  # Columns: 'text', 'label'
+df = pd.read_csv(r'data\newdata.csv')  # Columns: 'text', 'label'
 df['text'] = df['text'].astype(str)
 y = df['label'].astype(str)
 
@@ -92,6 +93,11 @@ model.fit(X_tr, y_tr)
 # ----------------------------
 print("Training Complete!\n")
 print(classification_report(y_te, model.predict(X_te), digits=4))
+
+cm = confusion_matrix(y_te, model.predict(X_te), labels=model.classes_)
+print("\nConfusion Matrix:")
+print(pd.DataFrame(cm, index=model.classes_, columns=model.classes_))
+
 
 # ----------------------------
 # 7) Interactive testing
