@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DLP Dashboard - Endpoint Protector</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 3px 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .logo {
+            padding: 24px 20px;
+            border-bottom: 1px solid #34495e;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo h1 {
+            font-size: 22px;
+            font-weight: 600;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-icon {
+            font-size: 28px;
+            color: #3498db;
+        }
+
+        .search-box {
+            padding: 16px 20px;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: none;
+            background-color: #34495e;
+            color: white;
+            font-size: 14px;
+        }
+
+        .search-box input::placeholder {
+            color: #bdc3c7;
+        }
+
+        .nav-section {
+            padding: 20px 0;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .nav-title {
+            padding: 0 20px 10px;
+            font-size: 13px;
+            text-transform: uppercase;
+            color: #95a5a6;
+            letter-spacing: 1px;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 15px;
+        }
+
+        .nav-item:hover {
+            background-color: #34495e;
+            border-left: 4px solid #3498db;
+        }
+
+        .nav-item.active {
+            background-color: #34495e;
+            border-left: 4px solid #2ecc71;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+            color: #bdc3c7;
+        }
+
+        .nav-item.active i {
+            color: #2ecc71;
+        }
+
+        .nav-item .fa-chevron-down {
+            margin-left: auto;
+            font-size: 12px;
+            transition: transform 0.3s;
+        }
+
+        .nav-item.expanded .fa-chevron-down {
+            transform: rotate(180deg);
+        }
+
+        .submenu {
+            list-style: none;
+            background-color: #25313f;
+            display: none;
+        }
+
+        .submenu.expanded {
+            display: block;
+        }
+
+        .submenu-item {
+            padding: 10px 20px 10px 56px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .submenu-item:hover {
+            background-color: #2c3e50;
+            color: #3498db;
+        }
+
+        .submenu-item.active {
+            color: #2ecc71;
+            font-weight: 500;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .top-bar {
+            background-color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            z-index: 10;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info i {
+            font-size: 20px;
+            color: #7f8c8d;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #3498db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .status-bar {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #3498db;
+        }
+
+        .status-bar p {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .effective-rights {
+            background-color: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: #3498db;
+        }
+
+        .criteria-box {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 4px solid #2ecc71;
+        }
+
+        .checkbox-item {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-item input {
+            width: 18px;
+            height: 18px;
+        }
+
+        .form-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        .form-table th {
+            text-align: left;
+            padding: 15px;
+            background-color: #f1f8ff;
+            color: #2c3e50;
+            font-weight: 600;
+            border: 1px solid #e1e8ed;
+        }
+
+        .form-table td {
+            padding: 15px;
+            border: 1px solid #e1e8ed;
+        }
+
+        .form-table select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            background-color: white;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .generate-btn {
+            background: linear-gradient(90deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .generate-btn:hover {
+            background: linear-gradient(90deg, #2980b9, #1c6ea4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        .footer {
+            background-color: white;
+            padding: 20px 30px;
+            border-top: 1px solid #e1e8ed;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .footer .version {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 220px;
+            }
+            
+            .content-area {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+                height: 100%;
+                transition: transform 0.3s;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .menu-toggle {
+                display: block;
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 99;
+                background-color: #3498db;
+                color: white;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px;
+                cursor: pointer;
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            }
+            
+            .top-bar {
+                padding-left: 70px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Toggle -->
+    <div class="menu-toggle" id="menuToggle">
+        <i class="fas fa-bars"></i>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <div class="logo-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h1>ENDPOINT PROTECTOR</h1>
+        </div>
+        
+        <div class="search-box">
+            <input type="text" placeholder="Search...">
+        </div>
+        
+        <div class="nav-section">
+            <div class="nav-title">Welcome</div>
+            <ul class="nav-menu">
+                <li class="nav-item active" id="dashboardItem">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                    <i class="fas fa-chevron-down"></i>
+                </li>
+                <ul class="submenu" id="dashboardSubmenu">
+                    <li class="submenu-item active">General Dashboard</li>
+                    <li class="submenu-item">System Status</li>
+                    <li class="submenu-item">Live Update</li>
+                    <li class="submenu-item">Effective Rights</li>
+                </ul>
+            </ul>
+        </div>
+        
+        <div class="nav-section">
+            <div class="nav-title">Device Control</div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <i class="fas fa-laptop"></i>
+                    <span>Content Aware Protection</span>
+                </li>
+                <li class="nav-item">
+                    <i class="fas fa-search"></i>
+                    <span>eDiscovery</span>
+                </li>
+                <li class="nav-item">
+                    <i class="fas fa-list"></i>
+                    <span>Blacklists and Whitelists</span>
+                </li>
+                <li class="nav-item">
+                    <i class="fas fa-lock"></i>
+                    <span>Enforced Encryption</span>
+                </li>
+                <li class="nav-item">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>Mobile Device Management</span>
+                </li>
+                <li class="nav-item">
+                    <i class="fas fa-key"></i>
+                    <span>Offline Temporary Password</span>
+                </li>
+                <li class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports and Analysis</span>
+                </li>
+                <li class="nav-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Alerts</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="top-bar">
+            <div class="page-title">Endpoint Protector - Effective Rights</div>
+            <div class="user-info">
+                <i class="fas fa-question-circle"></i>
+                <i class="fas fa-cog"></i>
+                <div class="user-avatar">AD</div>
+            </div>
+        </div>
+        
+        <div class="content-area">
+            <div class="status-bar">
+                <p>Currently the system is using both computer and user rights, computer rights have priority.</p>
+            </div>
+            
+            <div class="effective-rights">
+                <div class="section-title">
+                    <i class="fas fa-user-shield"></i>
+                    Effective Rights Criteria
+                </div>
+                
+                <div class="criteria-box">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="globalRights">
+                        <label for="globalRights">Effective Rights can be generated globally as well as for a single device, computer or user. Depending on the number of entities, generating effective Rights globally can take up to several minutes.</label>
+                    </div>
+                </div>
+                
+                <table class="form-table">
+                    <tr>
+                        <th>Effective Rights for:</th>
+                        <td>
+                            <select>
+                                <option>Device Control</option>
+                                <option>Content Protection</option>
+                                <option>Encryption</option>
+                                <option>Device Management</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Right:</th>
+                        <td>
+                            <select>
+                                <option>All</option>
+                                <option>Read Only</option>
+                                <option>Read/Write</option>
+                                <option>No Access</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Device Type:</th>
+                        <td>
+                            <select>
+                                <option>All</option>
+                                <option>USB Storage</option>
+                                <option>CD/DVD</option>
+                                <option>Bluetooth</option>
+                                <option>Network Devices</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Device:</th>
+                        <td>
+                            <select>
+                                <option>All</option>
+                                <option>Specific Devices</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Computer:</th>
+                        <td>
+                            <select>
+                                <option>All</option>
+                                <option>Specific Computers</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>User:</th>
+                        <td>
+                            <select>
+                                <option>All</option>
+                                <option>Specific Users</option>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+                
+                <button class="generate-btn">
+                    <i class="fas fa-cogs"></i>
+                    Generate
+                </button>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div>© 2004 - 2017 CoSoSys Ltd. All rights reserved.</div>
+            <div class="version">Version 5.0/800 • 6</div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle submenu
+        const dashboardItem = document.getElementById('dashboardItem');
+        const dashboardSubmenu = document.getElementById('dashboardSubmenu');
+        
+        dashboardItem.addEventListener('click', function() {
+            this.classList.toggle('expanded');
+            dashboardSubmenu.classList.toggle('expanded');
+        });
+        
+        // Set active submenu item
+        const submenuItems = document.querySelectorAll('.submenu-item');
+        submenuItems.forEach(item => {
+            item.addEventListener('click', function() {
+                submenuItems.forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+        
+        // Mobile menu toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        
+        menuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+            
+            // Change icon
+            const icon = this.querySelector('i');
+            if (sidebar.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        });
+        
+        // Generate button click
+        const generateBtn = document.querySelector('.generate-btn');
+        generateBtn.addEventListener('click', function() {
+            // Visual feedback for button press
+            this.style.transform = 'translateY(0)';
+            setTimeout(() => {
+                this.style.transform = 'translateY(-2px)';
+            }, 150);
+            
+            // Show a mock alert (non-functional UI)
+            alert('This is a mock interface. In a real DLP system, this would generate effective rights based on selected criteria.');
+        });
+        
+        // Make the checkbox functional for demo
+        const globalRightsCheckbox = document.getElementById('globalRights');
+        globalRightsCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                document.querySelector('.criteria-box').style.borderLeftColor = '#e74c3c';
+            } else {
+                document.querySelector('.criteria-box').style.borderLeftColor = '#2ecc71';
+            }
+        });
+    </script>
+</body>
+</html>

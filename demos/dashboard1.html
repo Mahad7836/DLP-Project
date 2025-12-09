@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DLP Dashboard - Endpoint Protector</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 3px 0 15px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+        }
+
+        .logo {
+            padding: 24px 20px;
+            border-bottom: 1px solid #0f3460;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo h1 {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #4cc9f0, #4361ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-icon {
+            font-size: 32px;
+            color: #4cc9f0;
+        }
+
+        .search-box {
+            padding: 16px 20px;
+            border-bottom: 1px solid #0f3460;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 1px solid #4cc9f0;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #4361ee;
+            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.3);
+        }
+
+        .search-box input::placeholder {
+            color: #a5b4cb;
+        }
+
+        .nav-section {
+            padding: 20px 0;
+            border-bottom: 1px solid #0f3460;
+        }
+
+        .nav-title {
+            padding: 0 20px 10px;
+            font-size: 13px;
+            text-transform: uppercase;
+            color: #a5b4cb;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 15px;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: linear-gradient(90deg, rgba(76, 201, 240, 0.1), transparent);
+            border-left: 3px solid #4cc9f0;
+            padding-left: 23px;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(67, 97, 238, 0.2), transparent);
+            border-left: 3px solid #4361ee;
+            padding-left: 23px;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+            color: #4cc9f0;
+        }
+
+        .nav-item.active i {
+            color: #4361ee;
+        }
+
+        .nav-item .fa-chevron-down {
+            margin-left: auto;
+            font-size: 12px;
+            transition: transform 0.3s;
+        }
+
+        .nav-item.expanded .fa-chevron-down {
+            transform: rotate(180deg);
+        }
+
+        .submenu {
+            list-style: none;
+            background-color: rgba(15, 52, 96, 0.5);
+            display: none;
+        }
+
+        .submenu.expanded {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .submenu-item {
+            padding: 12px 20px 12px 56px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .submenu-item:hover {
+            background-color: rgba(76, 201, 240, 0.1);
+            color: #4cc9f0;
+        }
+
+        .submenu-item.active {
+            color: #4361ee;
+            font-weight: 600;
+            background-color: rgba(67, 97, 238, 0.1);
+        }
+
+        .submenu-item.active::before {
+            content: '';
+            position: absolute;
+            left: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background-color: #4361ee;
+            border-radius: 50%;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-color: #f8fafc;
+        }
+
+        .top-bar {
+            background: linear-gradient(90deg, #ffffff 0%, #f1f5f9 100%);
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .page-title {
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #1a1a2e, #16213e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-title i {
+            color: #4361ee;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            padding: 8px 12px;
+            border-radius: 20px;
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            font-weight: 500;
+        }
+
+        .api-status.connected { background-color: #e8f5e9; color: #2e7d32; }
+        .api-status.disconnected { background-color: #ffebee; color: #c62828; }
+        .api-status.connecting { background-color: #fff3e0; color: #b26a00; }
+
+        .api-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .api-status.connected .api-status-dot { background-color: #2e7d32; }
+        .api-status.disconnected .api-status-dot { background-color: #c62828; }
+        .api-status.connecting .api-status-dot { background-color: #b26a00; }
+
+        .user-info i {
+            font-size: 20px;
+            color: #64748b;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .user-info i:hover {
+            color: #4361ee;
+        }
+
+        .user-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(67, 97, 238, 0.3);
+            transition: transform 0.3s;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.05);
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            background-color: #f8fafc;
+        }
+
+        /* Dashboard Cards */
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-top: 4px solid;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .dashboard-card h3 {
+            font-size: 16px;
+            color: #64748b;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dashboard-card .value {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .dashboard-card.total { border-color: #4361ee; }
+        .dashboard-card.allow { border-color: #2e7d32; }
+        .dashboard-card.warn { border-color: #b26a00; }
+        .dashboard-card.block { border-color: #c62828; }
+
+        .dashboard-card.total .value { color: #4361ee; }
+        .dashboard-card.allow .value { color: #2e7d32; }
+        .dashboard-card.warn .value { color: #b26a00; }
+        .dashboard-card.block .value { color: #c62828; }
+
+        .dashboard-card .trend {
+            font-size: 14px;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dashboard-card .trend.up { color: #2e7d32; }
+        .dashboard-card .trend.down { color: #c62828; }
+
+        /* Upload Section */
+        .upload-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .upload-section h3 {
+            margin-bottom: 20px;
+            color: #1a1a2e;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .upload-section h3 i {
+            color: #4361ee;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-color: #f8fafc;
+            margin-bottom: 20px;
+        }
+
+        .file-upload-area:hover {
+            border-color: #4361ee;
+            background-color: #f0f7ff;
+        }
+
+        .file-upload-area.dragover {
+            border-color: #4361ee;
+            background-color: #e8f0ff;
+            transform: scale(1.01);
+        }
+
+        .file-upload-icon {
+            font-size: 48px;
+            color: #94a3b8;
+            margin-bottom: 15px;
+        }
+
+        .file-upload-area:hover .file-upload-icon {
+            color: #4361ee;
+        }
+
+        .file-upload-text {
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+
+        .file-upload-text strong {
+            color: #4361ee;
+        }
+
+        .file-info {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f1f5f9;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #475569;
+            display: none;
+        }
+
+        .upload-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #4361ee 0%, #3a0ca3 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(67, 97, 238, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background-color: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e2e8f0;
+        }
+
+        .btn-success {
+            background: linear-gradient(90deg, #2e7d32 0%, #1b5e20 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(90deg, #c62828 0%, #b71c1c 100%);
+            color: white;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #4361ee;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Results Table */
+        .results-section {
+            display: none;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .results-header h3 {
+            color: #1a1a2e;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .results-table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+        }
+
+        th {
+            padding: 18px 20px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #e2e8f0;
+            transition: background-color 0.3s;
+        }
+
+        tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        td {
+            padding: 16px 20px;
+            color: #475569;
+        }
+
+        .policy-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .ALLOW { 
+            background: linear-gradient(90deg, #e8f5e9, #c8e6c9);
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+
+        .WARN { 
+            background: linear-gradient(90deg, #fff3e0, #ffcc80);
+            color: #b26a00;
+            border: 1px solid #ffb74d;
+        }
+
+        .BLOCK { 
+            background: linear-gradient(90deg, #ffebee, #ffcdd2);
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+
+        .entity-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            margin: 2px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .entity-tag.PHONE { background-color: #e3f2fd; color: #1565c0; }
+        .entity-tag.EMAIL { background-color: #e8f5e9; color: #2e7d32; }
+        .entity-tag.CNIC { background-color: #fff3e0; color: #b26a00; }
+        .entity-tag.SSN { background-color: #fce4ec; color: #ad1457; }
+        .entity-tag.CREDIT_CARD { background-color: #f3e5f5; color: #7b1fa2; }
+        .entity-tag.BANK_ACCOUNT { background-color: #e0f2f1; color: #00695c; }
+
+        .confidence-bar {
+            width: 100px;
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .high-confidence { background: linear-gradient(90deg, #2e7d32, #4caf50); }
+        .medium-confidence { background: linear-gradient(90deg, #b26a00, #ff9800); }
+        .low-confidence { background: linear-gradient(90deg, #c62828, #f44336); }
+
+        .text-preview {
+            max-width: 300px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: white;
+            padding: 20px 30px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .footer .version {
+            font-weight: 600;
+            color: #4361ee;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 220px;
+            }
+            
+            .dashboard-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -260px;
+                height: 100%;
+                transition: left 0.3s;
+                z-index: 1000;
+            }
+            
+            .sidebar.active {
+                left: 0;
+            }
+            
+            .menu-toggle {
+                display: block;
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 999;
+                background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+                color: white;
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+                transition: transform 0.3s;
+            }
+            
+            .menu-toggle:hover {
+                transform: scale(1.1);
+            }
+            
+            .top-bar {
+                padding-left: 70px;
+            }
+            
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .upload-actions {
+                flex-direction: column;
+            }
+            
+            .results-table-container {
+                overflow-x: auto;
+            }
+            
+            table {
+                min-width: 800px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Toggle -->
+    <div class="menu-toggle" id="menuToggle">
+        <i class="fas fa-bars"></i>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <div class="logo-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h1>ENDPOINT PROTECTOR</h1>
+        </div>
+        
+        <div class="search-box">
+            <input type="text" placeholder="Search policies, devices, users...">
+        </div>
+        
+        <div class="nav-section">
+            <div class="nav-title">Dashboard</div>
+            <ul class="nav-menu">
+                <li class="nav-item active" id="dashboardItem">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>DLP Scanner</span>
+                    <i class="fas fa-chevron-down"></i>
+                </li>
+                <ul class="submenu expanded" id="dashboardSubmenu">
+                    <li class="submenu-item active" data-section="upload">File Upload</li>
+                    <li class="submenu-item" data-section="realtime">Real-time Scan</li>
+                    <li class="submenu-item" data-section="results">Scan Results</li>
+                    <li class="submenu-item" data-section="reports">Reports</li>
+                </ul>
+            </ul>
+        </div>
+        
+        <div class="nav-section">
+            <div class="nav-title">Device Control</div>
+            <ul class="nav-menu">
+                <li class="nav-item" data-section="protection">
+                    <i class="fas fa-laptop-code"></i>
+                    <span>Content Protection</span>
+                </li>
+                <li class="nav-item" data-section="discovery">
+                    <i class="fas fa-search"></i>
+                    <span>eDiscovery</span>
+                </li>
+                <li class="nav-item" data-section="blacklists">
+                    <i class="fas fa-ban"></i>
+                    <span>Blacklists/Whitelists</span>
+                </li>
+                <li class="nav-item" data-section="encryption">
+                    <i class="fas fa-lock"></i>
+                    <span>Enforced Encryption</span>
+                </li>
+                <li class="nav-item" data-section="mobile">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>Mobile Device Mgmt</span>
+                </li>
+                <li class="nav-item" data-section="password">
+                    <i class="fas fa-key"></i>
+                    <span>Temporary Password</span>
+                </li>
+                <li class="nav-item" data-section="reports">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports & Analysis</span>
+                </li>
+                <li class="nav-item" data-section="alerts">
+                    <i class="fas fa-bell"></i>
+                    <span>Alerts</span>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="nav-section" style="margin-top: auto;">
+            <ul class="nav-menu">
+                <li class="nav-item" id="settingsItem">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </li>
+                <li class="nav-item" id="helpItem">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Help & Support</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="top-bar">
+            <div class="page-title">
+                <i class="fas fa-user-shield"></i>
+                <span>AI-Powered DLP Scanner</span>
+            </div>
+            <div class="user-info">
+                <div class="api-status connecting" id="apiStatus">
+                    <span class="api-status-dot"></span>
+                    <span>Connecting to API...</span>
+                </div>
+                <i class="fas fa-bell" title="Notifications"></i>
+                <i class="fas fa-question-circle" title="Help"></i>
+                <div class="user-avatar" title="Admin User">
+                    AD
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-area">
+            <!-- Dashboard Cards -->
+            <div class="dashboard-cards" id="dashboardCards">
+                <div class="dashboard-card total">
+                    <h3><i class="fas fa-database"></i> Total Scans</h3>
+                    <div class="value" id="totalScans">0</div>
+                    <div class="trend up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>12% from last week</span>
+                    </div>
+                </div>
+                <div class="dashboard-card allow">
+                    <h3><i class="fas fa-check-circle"></i> Allowed</h3>
+                    <div class="value" id="allowedCount">0</div>
+                    <div class="trend up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>8% from last week</span>
+                    </div>
+                </div>
+                <div class="dashboard-card warn">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Warnings</h3>
+                    <div class="value" id="warningCount">0</div>
+                    <div class="trend down">
+                        <i class="fas fa-arrow-down"></i>
+                        <span>3% from last week</span>
+                    </div>
+                </div>
+                <div class="dashboard-card block">
+                    <h3><i class="fas fa-ban"></i> Blocked</h3>
+                    <div class="value" id="blockedCount">0</div>
+                    <div class="trend up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>15% from last week</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Upload Section -->
+            <div class="upload-section" id="uploadSection">
+                <h3><i class="fas fa-cloud-upload-alt"></i> Upload CSV for Batch Scanning</h3>
+                <p style="color: #64748b; margin-bottom: 20px;">Upload a CSV file containing a 'text' column to scan for sensitive information (PII). The system uses AI to detect emails, phone numbers, CNICs, SSNs, credit cards, and more.</p>
+                
+                <div class="file-upload-area" id="fileUploadArea">
+                    <div class="file-upload-icon">
+                        <i class="fas fa-file-csv"></i>
+                    </div>
+                    <div class="file-upload-text">
+                        <strong>Click to upload</strong> or drag and drop your CSV file here
+                    </div>
+                    <div style="font-size: 14px; color: #94a3b8;">
+                        Supports .csv files up to 10MB
+                    </div>
+                    <input type="file" id="fileInput" accept=".csv" style="display: none;">
+                </div>
+                
+                <div class="file-info" id="fileInfo">
+                    <i class="fas fa-file"></i>
+                    <span id="fileName"></span>
+                    <span id="fileSize" style="margin-left: 10px;"></span>
+                </div>
+                
+                <div class="upload-actions">
+                    <button class="btn btn-primary" id="uploadBtn" disabled>
+                        <i class="fas fa-upload"></i>
+                        Upload & Scan
+                    </button>
+                    <button class="btn btn-secondary" id="sampleBtn">
+                        <i class="fas fa-vial"></i>
+                        Load Sample Data
+                    </button>
+                    <button class="btn btn-secondary" id="clearBtn">
+                        <i class="fas fa-trash"></i>
+                        Clear
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Scanning for sensitive information...</p>
+                <p style="color: #64748b; font-size: 14px; margin-top: 10px;">
+                    Analyzing text with XGBoost AI model for PII detection
+                </p>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection">
+                <div class="results-header">
+                    <h3><i class="fas fa-clipboard-list"></i> Scan Results</h3>
+                    <div>
+                        <button class="btn btn-secondary" id="exportBtn">
+                            <i class="fas fa-download"></i>
+                            Export CSV
+                        </button>
+                        <button class="btn btn-secondary" id="printBtn">
+                            <i class="fas fa-print"></i>
+                            Print Report
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="results-table-container">
+                    <table id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Text Preview</th>
+                                <th>Classification</th>
+                                <th>Confidence</th>
+                                <th>Policy Action</th>
+                                <th>Detected Entities</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsBody">
+                            <!-- Results will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div>© 2024 AI DLP System. Powered by XGBoost AI.</div>
+            <div class="version">Version 2.1.0 • Model: XGBoost Classifier</div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE = "http://localhost:8000";
+        let scanResults = [];
+        let currentFile = null;
+        let totalScans = 0;
+        let allowedCount = 0;
+        let warningCount = 0;
+        let blockedCount = 0;
+
+        // DOM Elements
+        const sidebar = document.getElementById('sidebar');
+        const menuToggle = document.getElementById('menuToggle');
+        const fileInput = document.getElementById('fileInput');
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const sampleBtn = document.getElementById('sampleBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const loading = document.getElementById('loading');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultsBody = document.getElementById('resultsBody');
+        const exportBtn = document.getElementById('exportBtn');
+        const apiStatus = document.getElementById('apiStatus');
+        const dashboardCards = document.getElementById('dashboardCards');
+        const totalScansEl = document.getElementById('totalScans');
+        const allowedCountEl = document.getElementById('allowedCount');
+        const warningCountEl = document.getElementById('warningCount');
+        const blockedCountEl = document.getElementById('blockedCount');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAPIStatus();
+            setupEventListeners();
+            updateDashboardStats();
+        });
+
+        // Check API status
+        async function checkAPIStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                if (data.status === 'healthy' && data.model_loaded) {
+                    apiStatus.className = 'api-status connected';
+                    apiStatus.innerHTML = '<span class="api-status-dot"></span><span>API Connected • Model Loaded</span>';
+                } else if (data.status === 'model_not_loaded') {
+                    apiStatus.className = 'api-status warning';
+                    apiStatus.innerHTML = '<span class="api-status-dot"></span><span>API Connected • Model Not Loaded</span>';
+                }
+            } catch (error) {
+                apiStatus.className = 'api-status disconnected';
+                apiStatus.innerHTML = '<span class="api-status-dot"></span><span>API Disconnected</span>';
+                console.error('API connection error:', error);
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Mobile menu toggle
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+                const icon = menuToggle.querySelector('i');
+                icon.classList.toggle('fa-bars');
+                icon.classList.toggle('fa-times');
+            });
+
+            // File upload area click
+            fileUploadArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            // File input change
+            fileInput.addEventListener('change', handleFileSelect);
+
+            // Drag and drop
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                fileUploadArea.addEventListener(eventName, preventDefaults, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                fileUploadArea.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                fileUploadArea.addEventListener(eventName, unhighlight, false);
+            });
+
+            fileUploadArea.addEventListener('drop', handleDrop, false);
+
+            // Upload button
+            uploadBtn.addEventListener('click', uploadAndScan);
+
+            // Sample data button
+            sampleBtn.addEventListener('click', loadSampleData);
+
+            // Clear button
+            clearBtn.addEventListener('click', clearResults);
+
+            // Export button
+            exportBtn.addEventListener('click', exportResults);
+
+            // Navigation
+            document.querySelectorAll('.nav-item, .submenu-item').forEach(item => {
+                item.addEventListener('click', handleNavigation);
+            });
+        }
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function highlight() {
+            fileUploadArea.classList.add('dragover');
+        }
+
+        function unhighlight() {
+            fileUploadArea.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            
+            const file = files[0];
+            if (!file.name.endsWith('.csv')) {
+                alert('Please select a CSV file');
+                return;
+            }
+            
+            currentFile = file;
+            fileName.textContent = file.name;
+            fileSize.textContent = `(${(file.size / 1024).toFixed(2)} KB)`;
+            fileInfo.style.display = 'block';
+            uploadBtn.disabled = false;
+        }
+
+        async function uploadAndScan() {
+            if (!currentFile) {
+                alert('Please select a file first');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', currentFile);
+
+            // Show loading
+            loading.style.display = 'block';
+            uploadBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/upload-csv`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Process results
+                scanResults = data.preview || [];
+                updateResultsTable();
+                updateDashboardFromResults(data.summary || {});
+                resultsSection.style.display = 'block';
+
+                // Scroll to results
+                resultsSection.scrollIntoView({ behavior: 'smooth' });
+
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            } finally {
+                loading.style.display = 'none';
+                uploadBtn.disabled = false;
+            }
+        }
+
+        function updateResultsTable() {
+            resultsBody.innerHTML = '';
+            
+            scanResults.forEach((result, index) => {
+                const row = document.createElement('tr');
+                
+                // Confidence bar
+                const confidencePercent = Math.round(result.score * 100);
+                let confidenceClass = 'low-confidence';
+                if (confidencePercent >= 70) confidenceClass = 'high-confidence';
+                else if (confidencePercent >= 50) confidenceClass = 'medium-confidence';
+                
+                const confidenceBar = `
+                    <div class="confidence-bar">
+                        <div class="confidence-fill ${confidenceClass}" style="width: ${confidencePercent}%"></div>
+                    </div>
+                    ${confidencePercent}%
+                `;
+                
+                // Entities tags
+                const entitiesHtml = result.entities && result.entities.length > 0
+                    ? result.entities.map(entity => 
+                        `<span class="entity-tag ${entity.type}">${entity.type}</span>`
+                    ).join(' ')
+                    : '<span style="color: #94a3b8;">None</span>';
+                
+                // Text preview (truncated)
+                const textPreview = result.text.length > 100 
+                    ? result.text.substring(0, 100) + '...' 
+                    : result.text;
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td class="text-preview" title="${result.text}">${textPreview}</td>
+                    <td>${result.class || 'SAFE'}</td>
+                    <td>${confidenceBar}</td>
+                    <td><span class="policy-badge ${result.policy}">${result.policy}</span></td>
+                    <td>${entitiesHtml}</td>
+                `;
+                
+                resultsBody.appendChild(row);
+            });
+        }
+
+        function updateDashboardFromResults(summary) {
+            totalScans += scanResults.length;
+            allowedCount += summary.ALLOW || 0;
+            warningCount += summary.WARN || 0;
+            blockedCount += summary.BLOCK || 0;
+            
+            updateDashboardStats();
+        }
+
+        function updateDashboardStats() {
+            totalScansEl.textContent = totalScans;
+            allowedCountEl.textContent = allowedCount;
+            warningCountEl.textContent = warningCount;
+            blockedCountEl.textContent = blockedCount;
+        }
+
+        async function loadSampleData() {
+            // Create sample CSV data
+            const sampleData = [
+                "Please send my SSN 123-45-6789 to john@example.com",
+                "My phone number is 0300-1234567, call me anytime",
+                "Credit card 4111-1111-1111-1111 expires 12/25",
+                "My CNIC is 12345-6789012-3 for verification",
+                "Meeting reminder: Tomorrow at 2 PM in conference room A",
+                "Bank account IBAN: PK36SCBL0000001123456702",
+                "Passport number: A1234567, issued in USA",
+                "Medical record ID: MRN-789-01-2345, patient: Jane Doe",
+                "The weather is nice today, let's go for a walk",
+                "License plate ABC-123, VIN: 1HGBH41JXMN109186",
+                "Email me at sarah.connor@example.org for details",
+                "My mobile is +92-300-1234567 for WhatsApp",
+                "Just checking in to see how you're doing",
+                "Account number: 987654321, routing: 021000021"
+            ];
+            
+            // Convert to CSV format
+            const csvContent = "text\n" + sampleData.join("\n");
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            
+            // Create a file object
+            currentFile = new File([blob], "sample_data.csv", { type: "text/csv" });
+            
+            // Update UI
+            fileName.textContent = "sample_data.csv";
+            fileSize.textContent = `(${(blob.size / 1024).toFixed(2)} KB)`;
+            fileInfo.style.display = 'block';
+            uploadBtn.disabled = false;
+            
+            // Auto-upload
+            setTimeout(() => {
+                uploadAndScan();
+            }, 500);
+        }
+
+        function clearResults() {
+            currentFile = null;
+            fileInput.value = '';
+            fileInfo.style.display = 'none';
+            uploadBtn.disabled = true;
+            resultsSection.style.display = 'none';
+            scanResults = [];
+            resultsBody.innerHTML = '';
+        }
+
+        function exportResults() {
+            if (scanResults.length === 0) {
+                alert('No results to export');
+                return;
+            }
+            
+            // Convert to CSV
+            const headers = ['Row', 'Text', 'Classification', 'Confidence', 'Policy', 'Entities'];
+            const rows = scanResults.map((result, index) => [
+                index + 1,
+                `"${result.text.replace(/"/g, '""')}"`,
+                result.class || 'SAFE',
+                result.score,
+                result.policy,
+                result.entities ? result.entities.map(e => `${e.type}:${e.value}`).join('; ') : ''
+            ]);
+            
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.join(','))
+            ].join('\n');
+            
+            // Create download link
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `dlp_scan_results_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function handleNavigation(e) {
+            const item = e.currentTarget;
+            const section = item.dataset.section;
+            
+            // Update active states
+            if (item.classList.contains('submenu-item')) {
+                document.querySelectorAll('.submenu-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+            } else if (item.classList.contains('nav-item')) {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+            }
+            
+            // Handle section navigation
+            if (section === 'upload') {
+                document.getElementById('uploadSection').scrollIntoView({ behavior: 'smooth' });
+            } else if (section === 'results') {
+                if (resultsSection.style.display === 'block') {
+                    resultsSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+            
+            // Close sidebar on mobile
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('active');
+                const icon = menuToggle.querySelector('i');
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        }
+
+        // Real-time text scanning (could be added as another feature)
+        async function scanText(text) {
+            try {
+                const response = await fetch(`${API_BASE}/analyze-text`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                return await response.json();
+            } catch (error) {
+                console.error('Error scanning text:', error);
+                return null;
+            }
+        }
+
+        // Periodically check API status
+        setInterval(checkAPIStatus, 30000);
+    </script>
+</body>
+</html>
