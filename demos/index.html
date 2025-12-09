@@ -11,28 +11,25 @@
     .ALLOW{color:#2e7d32;font-weight:600}
     .WARN{color:#b26a00;font-weight:600}
     .BLOCK{color:#c62828;font-weight:700}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;}
   </style>
 </head>
 <body>
-  <h2>AI DLP — Upload CSV and Scan</h2>
-
-  <section>
-    <label>Upload CSV (must have a <code>text</code> column): </label>
-    <input type="file" id="file" accept=".csv"/>
-    <button id="btn">Upload & Scan</button>
-    <div id="msg"></div>
-    <div id="summary"></div>
-    <table id="tbl" style="display:none">
-      <thead><tr><th>#</th><th>text</th><th>class</th><th>score</th><th>policy</th><th>phones</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </section>
+  <h2>AI DLP — Upload & Scan</h2>
+  <p>Upload a CSV with a <code>text</code> column.</p>
+  <input type="file" id="file" accept=".csv"/>
+  <button id="btn">Upload & Scan</button>
+  <div id="summary"></div>
+  <table id="tbl" style="display:none">
+    <thead><tr><th>#</th><th>text</th><th>class</th><th>score</th><th>policy</th><th>phones</th></tr></thead>
+    <tbody></tbody>
+  </table>
 
   <hr/>
   <h3>Try single message</h3>
   <textarea id="single" rows="3" style="width:100%" placeholder="Type text here..."></textarea>
   <button id="check">Analyze</button>
-  <pre id="singleOut"></pre>
+  <pre id="singleOut" class="mono"></pre>
 
 <script>
 const API = "http://localhost:8000";
@@ -41,13 +38,11 @@ document.getElementById("btn").onclick = async () => {
   const f = document.getElementById("file").files[0];
   if(!f){ alert("Pick a CSV first"); return; }
   const fd = new FormData(); fd.append("file", f);
-  document.getElementById("msg").textContent = "Scanning...";
   const res = await fetch(API + "/upload-csv", { method: "POST", body: fd });
   const data = await res.json();
-  document.getElementById("msg").textContent = "";
-  if(data.error){ document.getElementById("msg").textContent = data.error; return; }
+  if(data.error){ alert(data.error); return; }
 
-  document.getElementById("summary").textContent = 
+  document.getElementById("summary").textContent =
     "Rows: " + data.rows + " | Policies: " + JSON.stringify(data.summary);
 
   const tbl = document.getElementById("tbl");
@@ -72,7 +67,8 @@ document.getElementById("check").onclick = async () => {
     method: "POST", headers: {"Content-Type": "application/json"},
     body: JSON.stringify({text})
   });
-  document.getElementById("singleOut").textContent = JSON.stringify(await res.json(), null, 2);
+  document.getElementById("singleOut").textContent =
+    JSON.stringify(await res.json(), null, 2);
 };
 </script>
 </body>

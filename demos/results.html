@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Scan Results</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <div class="max-w-6xl mx-auto p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-semibold">Scan Results</h1>
+      <div>
+        <a href="/" class="px-3 py-2 bg-gray-200 rounded mr-2">Scan another</a>
+        <a href="/download_result" class="px-3 py-2 bg-green-600 text-white rounded">Download CSV</a>
+      </div>
+    </div>
+
+    <div class="mb-3 text-sm text-gray-600">Showing first 200 rows. Total rows scanned: {{ n_rows }}</div>
+
+    <div class="bg-white rounded shadow overflow-x-auto">
+      <table class="min-w-full">
+        <thead class="bg-gray-50 text-left">
+          <tr>
+            {% for c in columns %}
+              <th class="px-4 py-2 text-xs font-medium text-gray-600">{{ c }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in table %}
+            <tr class="border-t">
+              {% for c in columns %}
+                <td class="px-4 py-2 text-sm">
+                  {% set v = r.get(c) %}
+                  {% if c == 'action' %}
+                    {% if v == 'BLOCK' %}
+                      <span class="text-xs font-semibold px-2 py-1 bg-red-100 text-red-800 rounded">BLOCK</span>
+                    {% elif v == 'WARN' %}
+                      <span class="text-xs font-semibold px-2 py-1 bg-yellow-100 text-yellow-800 rounded">WARN</span>
+                    {% else %}
+                      <span class="text-xs font-semibold px-2 py-1 bg-green-100 text-green-800 rounded">ALLOW</span>
+                    {% endif %}
+                  {% else %}
+                    {{ v }}
+                  {% endif %}
+                </td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</body>
+</html>

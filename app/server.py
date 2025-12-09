@@ -1,16 +1,22 @@
 from fastapi import FastAPI, UploadFile, File
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 import pandas as pd
 from .dlp_core import score_text, score_dataframe
 
 app = FastAPI(title="DLP XGBoost Server")
 
+
+@app.get("/")
+def root():
+    return RedirectResponse(url="/docs")
+
 class TextIn(BaseModel):
     text: str
 
 @app.get("/health")
 def health():
-    return {"status":"ok"}
+    return {"status": "ok"}
 
 @app.post("/analyze-text")
 def analyze_text(payload: TextIn):
@@ -20,15 +26,19 @@ def analyze_text(payload: TextIn):
 def upload_csv(file: UploadFile = File(...)):
     df = pd.read_csv(file.file)
     if "text" not in df.columns:
-        return {"error":"CSV must contain a 'text' column"}
+        return {"error": "CSV must contain a 'text' column"}
     results = score_dataframe(df)
-    df_out = df.copy()
-    df_out["class"]  = [r["class"] for r in results]
-    df_out["score"]  = [r["score"] for r in results]
-    df_out["policy"] = [r["policy"] for r in results]
-    df_out["phones"] = [", ".join(r["phones"]) for r in results]
-    return {
-        "rows": len(df_out),
-        "preview": df_out.head(25).to_dict(orient="records"),
-        "summary": df_out["policy"].value_counts().to_dict()
-    }
+    out = []
+    for i, (row, r) in enumerate(zip(df.itertuples(index=False), results), start=1):
+        out.append({
+            "row": i,
+            "text": str(getattr(row, "text", ""))[:140],
+            "class": r["class"],
+            "score": r["score"],
+            "policy": r["policy"],
+            "phones": ", ".join(r.get("phones", []))
+        })
+    summary = {}
+    for o in out:
+        summary[o["policy"]] = summary.get(o["policy"], 0) + 1
+    return {"rows": len(out), "summary": summary, "preview": out[:25]}
