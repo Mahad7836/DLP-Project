@@ -1,75 +1,214 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <title>DLP Demo (XGBoost)</title>
-  <style>
-    body { font-family: system-ui, Arial; margin: 24px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 16px; }
-    th, td { border: 1px solid #ddd; padding: 8px; }
-    th { background: #f3f3f3; }
-    .ALLOW{color:#2e7d32;font-weight:600}
-    .WARN{color:#b26a00;font-weight:600}
-    .BLOCK{color:#c62828;font-weight:700}
-    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;}
-  </style>
+<meta charset="UTF-8">
+<title>AI DLP Scanner — XGBoost</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+body { margin:0; font-family:system-ui,Arial; background:#f1f5f9 }
+.sidebar {
+  width:260px; height:100vh; position:fixed; background:#0f172a; color:#fff;
+  display:flex; flex-direction:column;
+}
+.logo { padding:20px; font-weight:700; text-align:center }
+.main { margin-left:260px; padding:24px }
+.card-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px }
+.card {
+  background:#fff; padding:16px; border-radius:10px;
+  box-shadow:0 4px 10px rgba(0,0,0,.05)
+}
+.upload-box {
+  margin-top:24px; background:#fff; padding:24px; border-radius:12px;
+  border:2px dashed #cbd5e1; text-align:center; cursor:pointer
+}
+.upload-box:hover { background:#f8fafc }
+button {
+  padding:10px 16px; border:none; border-radius:8px;
+  cursor:pointer; background:#2563eb; color:#fff
+}
+button.secondary { background:#475569 }
+.loading { display:none; margin-top:20px }
+table {
+  width:100%; border-collapse:collapse; margin-top:24px; background:#fff
+}
+th,td { border:1px solid #e5e7eb; padding:10px }
+th { background:#f8fafc }
+.ALLOW { color:#16a34a; font-weight:600 }
+.WARN { color:#d97706; font-weight:600 }
+.BLOCK { color:#dc2626; font-weight:700 }
+.badge {
+  padding:4px 10px; border-radius:999px; font-size:12px;
+}
+.badge.ALLOW { background:#dcfce7 }
+.badge.WARN { background:#fef3c7 }
+.badge.BLOCK { background:#fee2e2 }
+.status { margin-bottom:12px }
+.connected { color:#16a34a }
+.disconnected { color:#dc2626 }
+</style>
 </head>
+
 <body>
-  <h2>AI DLP — Upload & Scan</h2>
-  <p>Upload a CSV with a <code>text</code> column.</p>
-  <input type="file" id="file" accept=".csv"/>
-  <button id="btn">Upload & Scan</button>
-  <div id="summary"></div>
-  <table id="tbl" style="display:none">
-    <thead><tr><th>#</th><th>text</th><th>class</th><th>score</th><th>policy</th><th>phones</th></tr></thead>
+
+<div class="sidebar">
+  <div class="logo">
+    <i class="fas fa-shield-alt"></i><br>
+    ENDPOINT PROTECTOR
+  </div>
+</div>
+
+<div class="main">
+  <h2><i class="fas fa-user-shield"></i> AI-Powered DLP Scanner</h2>
+
+  <div id="apiStatus" class="status">Checking API…</div>
+
+  <div class="card-grid">
+    <div class="card">Total Scans<br><b id="total">0</b></div>
+    <div class="card">Allowed<br><b id="allow">0</b></div>
+    <div class="card">Warnings<br><b id="warn">0</b></div>
+    <div class="card">Blocked<br><b id="block">0</b></div>
+  </div>
+
+  <div class="upload-box" id="uploadBox">
+    <i class="fas fa-file-csv fa-2x"></i><br><br>
+    <b>Click or Drop CSV</b><br>
+    <small>Must contain a <code>text</code> column</small>
+    <input type="file" id="fileInput" accept=".csv" hidden>
+  </div>
+
+  <div style="margin-top:16px">
+    <button id="scanBtn" disabled>Upload & Scan</button>
+    <button class="secondary" id="sampleBtn">Load Sample</button>
+  </div>
+
+  <div class="loading" id="loading">
+    <p><i class="fas fa-spinner fa-spin"></i> Scanning with XGBoost AI…</p>
+  </div>
+
+  <table id="results" style="display:none">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Text</th>
+        <th>Class</th>
+        <th>Score</th>
+        <th>Policy</th>
+        <th>Entities</th>
+      </tr>
+    </thead>
     <tbody></tbody>
   </table>
-
-  <hr/>
-  <h3>Try single message</h3>
-  <textarea id="single" rows="3" style="width:100%" placeholder="Type text here..."></textarea>
-  <button id="check">Analyze</button>
-  <pre id="singleOut" class="mono"></pre>
+</div>
 
 <script>
-const API = "http://localhost:8000";
+const API = "http://127.0.0.1:8000";
 
-document.getElementById("btn").onclick = async () => {
-  const f = document.getElementById("file").files[0];
-  if(!f){ alert("Pick a CSV first"); return; }
-  const fd = new FormData(); fd.append("file", f);
-  const res = await fetch(API + "/upload-csv", { method: "POST", body: fd });
-  const data = await res.json();
-  if(data.error){ alert(data.error); return; }
 
-  document.getElementById("summary").textContent =
-    "Rows: " + data.rows + " | Policies: " + JSON.stringify(data.summary);
+let currentFile = null;
+let totals = { total:0, ALLOW:0, WARN:0, BLOCK:0 };
 
-  const tbl = document.getElementById("tbl");
-  const tb  = tbl.querySelector("tbody");
-  tb.innerHTML = "";
-  (data.preview || []).forEach((row, i) => {
+const uploadBox = document.getElementById("uploadBox");
+const fileInput = document.getElementById("fileInput");
+const scanBtn = document.getElementById("scanBtn");
+const sampleBtn = document.getElementById("sampleBtn");
+const loading = document.getElementById("loading");
+const table = document.getElementById("results");
+const tbody = table.querySelector("tbody");
+
+/* ---------------- API HEALTH ---------------- */
+async function checkAPI() {
+  try {
+    const r = await fetch(API + "/health");
+    const d = await r.json();
+    document.getElementById("apiStatus").innerHTML =
+      `<span class="connected">● API Connected (Model Loaded)</span>`;
+  } catch {
+    document.getElementById("apiStatus").innerHTML =
+      `<span class="disconnected">● API Disconnected</span>`;
+  }
+}
+checkAPI();
+setInterval(checkAPI, 30000);
+
+/* ---------------- FILE PICK ---------------- */
+uploadBox.onclick = () => fileInput.click();
+fileInput.onchange = e => {
+  currentFile = e.target.files[0];
+  scanBtn.disabled = !currentFile;
+};
+
+/* ---------------- SAMPLE DATA ---------------- */
+sampleBtn.onclick = () => {
+  const rows = [
+    "SSN 123-45-6789 belongs to John",
+    "Email me at test@example.com",
+    "Call me at +92-300-1234567"
+  ];
+  const csv = "text\n" + rows.join("\n");
+  const blob = new Blob([csv], {type:"text/csv"});
+  currentFile = new File([blob], "sample.csv");
+  scanBtn.disabled = false;
+};
+
+/* ---------------- UPLOAD & SCAN ---------------- */
+scanBtn.onclick = async () => {
+  const fd = new FormData();
+  fd.append("file", currentFile);
+
+  loading.style.display = "block";
+  scanBtn.disabled = true;
+
+  try {
+    const r = await fetch(API + "/upload-csv", {
+      method:"POST", body:fd
+    });
+    const data = await r.json();
+    if(data.error) throw data.error;
+
+    renderResults(data.preview || []);
+    updateStats(data.summary || {});
+  } catch (e) {
+    alert("Scan failed: " + e);
+  } finally {
+    loading.style.display = "none";
+    scanBtn.disabled = false;
+  }
+};
+
+/* ---------------- RENDER ---------------- */
+function renderResults(rows) {
+  tbody.innerHTML = "";
+  rows.forEach((r,i)=>{
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${i+1}</td>
-      <td>${(row.text||"").toString().slice(0,140)}</td>
-      <td>${row.class}</td>
-      <td>${row.score}</td>
-      <td class="${row.policy}">${row.policy}</td>
-      <td>${row.phones||""}</td>`;
-    tb.appendChild(tr);
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td>${r.text.slice(0,120)}</td>
+      <td>${r.class}</td>
+      <td>${(r.score*100).toFixed(1)}%</td>
+      <td><span class="badge ${r.policy}">${r.policy}</span></td>
+      <td>${(r.entities||[]).map(e=>e.type).join(", ")}</td>
+    `;
+    tbody.appendChild(tr);
   });
-  tbl.style.display = "table";
-};
+  table.style.display = "table";
+}
 
-document.getElementById("check").onclick = async () => {
-  const text = document.getElementById("single").value;
-  const res = await fetch(API + "/analyze-text", {
-    method: "POST", headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({text})
-  });
-  document.getElementById("singleOut").textContent =
-    JSON.stringify(await res.json(), null, 2);
-};
+/* ---------------- STATS ---------------- */
+function updateStats(s) {
+  totals.total += Object.values(s).reduce((a,b)=>a+b,0);
+  totals.ALLOW += s.ALLOW||0;
+  totals.WARN  += s.WARN||0;
+  totals.BLOCK += s.BLOCK||0;
+
+  document.getElementById("total").textContent = totals.total;
+  document.getElementById("allow").textContent = totals.ALLOW;
+  document.getElementById("warn").textContent  = totals.WARN;
+  document.getElementById("block").textContent = totals.BLOCK;
+}
 </script>
+
 </body>
-</html>
+</html> 
