@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sentinel AI - DLP Dashboard</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --primary: #2563eb;
+        --sidebar-bg: #0f172a;
+        --bg-color: #f1f5f9;
+        --card-bg: #ffffff;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --success: #10b981;
+        --danger: #ef4444;
+        --warn: #f59e0b;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+    /* --- Sidebar --- */
+    .sidebar { width: 260px; background: var(--sidebar-bg); color: white; display: flex; flex-direction: column; padding: 20px; flex-shrink: 0; }
+    .logo { font-size: 1.25rem; font-weight: 700; margin-bottom: 40px; display: flex; align-items: center; gap: 10px; color: #38bdf8; }
+    .menu-item { padding: 12px 16px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; color: #94a3b8; transition: 0.2s; display: flex; align-items: center; gap: 12px; }
+    .menu-item:hover, .menu-item.active { background: #1e293b; color: white; }
+    .menu-item.active { border-left: 4px solid var(--primary); }
+
+    /* --- Main Content --- */
+    .main { flex: 1; padding: 32px; overflow-y: auto; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+    .status-badge { font-size: 0.85rem; padding: 6px 12px; border-radius: 20px; background: #e2e8f0; color: #64748b; display: flex; align-items: center; gap: 6px; }
+    .status-badge.online { background: #dcfce7; color: #166534; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+    /* --- Stats Grid --- */
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 32px; }
+    .card { background: var(--card-bg); padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    .stat-val { font-size: 2rem; font-weight: 700; margin-top: 8px; }
+    .stat-label { color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
+    .card.border-blue { border-top: 4px solid var(--primary); }
+    .card.border-red { border-top: 4px solid var(--danger); }
+    .card.border-yellow { border-top: 4px solid var(--warn); }
+    .card.border-green { border-top: 4px solid var(--success); }
+
+    /* --- Scanner Section --- */
+    .panel { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 24px; margin-bottom: 24px; }
+    textarea { width: 100%; height: 120px; padding: 16px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 1rem; resize: vertical; margin-bottom: 16px; transition: 0.2s; }
+    textarea:focus { outline: none; border-color: var(--primary); ring: 2px var(--primary); }
+    
+    button { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; font-size: 1rem; }
+    button:hover { background: #1d4ed8; transform: translateY(-1px); }
+    button:disabled { opacity: 0.7; cursor: not-allowed; }
+
+    /* --- Results --- */
+    .result-box { margin-top: 24px; padding-top: 24px; border-top: 1px solid #e2e8f0; display: none; }
+    .result-header { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+    .badge { padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; letter-spacing: 0.05em; text-transform: uppercase; }
+    .BLOCK { background: #fee2e2; color: #991b1b; }
+    .WARN { background: #ffedd5; color: #9a3412; }
+    .ALLOW { background: #dcfce7; color: #166534; }
+    
+    .flag-container { display: flex; gap: 12px; }
+    .flag { font-size: 0.8rem; padding: 4px 10px; border-radius: 20px; background: #f1f5f9; color: #64748b; }
+    .flag.active { background: #fee2e2; color: #ef4444; font-weight: 600; }
+
+    /* --- Analytics Tab --- */
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+    
+    .tab-nav { display: flex; gap: 16px; border-bottom: 2px solid #e2e8f0; margin-bottom: 24px; }
+    .tab-btn { padding: 12px 0; background: none; border: none; color: var(--text-muted); cursor: pointer; font-weight: 600; position: relative; border-radius: 0; }
+    .tab-btn:hover { color: var(--primary); }
+    .tab-btn.active { color: var(--primary); }
+    .tab-btn.active::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 100%; height: 2px; background: var(--primary); }
+
+    .chart-wrapper { text-align: center; background: #f8fafc; padding: 24px; border-radius: 12px; border: 1px dashed #cbd5e1; }
+    .chart-img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+
+</style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-shield-halved"></i> SENTINEL DLP
+        </div>
+        <div class="menu-item active" onclick="setView('dashboard', this)">
+            <i class="fas fa-gauge-high"></i> Dashboard
+        </div>
+        <div class="menu-item" onclick="setView('analytics', this)">
+            <i class="fas fa-microscope"></i> AI Explainability
+        </div>
+        <div style="margin-top: auto; font-size: 0.8rem; color: #475569;">
+            v2.2 Updated Engine
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="header">
+            <h2 id="page-title">Live Dashboard</h2>
+            <div id="api-indicator" class="status-badge">
+                <div class="status-dot"></div> <span id="api-text">Connecting...</span>
+            </div>
+        </div>
+
+        <div id="dashboard" class="view-section active">
+            <div class="grid">
+                <div class="card border-blue">
+                    <div class="stat-label">TOTAL SCANS</div>
+                    <div class="stat-val" id="count-total">0</div>
+                </div>
+                <div class="card border-red">
+                    <div class="stat-label">BLOCKED (PII)</div>
+                    <div class="stat-val" id="count-block">0</div>
+                </div>
+                <div class="card border-yellow">
+                    <div class="stat-label">WARNINGS</div>
+                    <div class="stat-val" id="count-warn">0</div>
+                </div>
+                <div class="card border-green">
+                    <div class="stat-label">SAFE TRAFFIC</div>
+                    <div class="stat-val" id="count-safe">0</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3 style="margin-top:0"><i class="fas fa-keyboard"></i> Live Text Scanner</h3>
+                <p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:16px;">
+                    Paste email bodies, chat logs, or documents here. The XGBoost model will analyze PII sensitivity in real-time.
+                </p>
+                <textarea id="inputText" placeholder="Example: Please reach out to me at +92 300 1234567 regarding the project details..."></textarea>
+                <div style="text-align: right;">
+                    <button onclick="scanText()" id="scanBtn">
+                        <i class="fas fa-magnifying-glass"></i> Analyze Text
+                    </button>
+                </div>
+
+                <div id="resultBox" class="result-box">
+                    <div class="result-header">
+                        <div>
+                            <span style="display:block; font-size:0.8rem; color:#64748b; margin-bottom:4px;">POLICY ACTION</span>
+                            <span id="res-policy" class="badge">--</span>
+                        </div>
+                        <div style="border-left:1px solid #e2e8f0; padding-left:16px;">
+                            <span style="display:block; font-size:0.8rem; color:#64748b; margin-bottom:4px;">DETECTED CLASS</span>
+                            <span id="res-class" style="font-weight:700; font-size:1.1rem;">--</span>
+                        </div>
+                        <div style="border-left:1px solid #e2e8f0; padding-left:16px;">
+                            <span style="display:block; font-size:0.8rem; color:#64748b; margin-bottom:4px;">CONFIDENCE</span>
+                            <span id="res-conf" style="font-weight:700; font-size:1.1rem;">--</span>
+                        </div>
+                    </div>
+
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 8px;">
+                        <span style="font-size:0.85rem; font-weight:600; color:#475569; margin-right:8px;">REGEX TRIGGERS:</span>
+                        <span id="flag-email" class="flag">Email</span>
+                        <span id="flag-phone" class="flag">Phone</span>
+                        <span id="flag-addr" class="flag">Address</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="analytics" class="view-section">
+            <div class="panel">
+                <h3><i class="fas fa-brain"></i> SHAP Model Explanations</h3>
+                <p style="color:var(--text-muted);">See exactly which words trigger the AI for specific categories.</p>
+                
+                <div class="tab-nav">
+                    <button class="tab-btn active" onclick="loadShap('EMAIL', this)">Email Logic</button>
+                    <button class="tab-btn" onclick="loadShap('PHONE', this)">Phone Logic</button>
+                    <button class="tab-btn" onclick="loadShap('ADDRESS', this)">Address Logic</button>
+                    <button class="tab-btn" onclick="loadShap('NONE', this)">Safe Logic</button>
+                </div>
+
+                <div class="chart-wrapper">
+                    <div id="loader" style="display:none; color:var(--primary); padding:40px;">
+                        <i class="fas fa-circle-notch fa-spin fa-2x"></i><br>Loading Analysis...
+                    </div>
+                    <img id="shap-img" class="chart-img" src="" alt="Select a tab to view">
+                    <div id="error-msg" style="display:none; color:var(--danger); padding:20px;">
+                        <i class="fas fa-exclamation-circle"></i> SHAP Plot not found. Please run the training script first.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+<script>
+    const API_URL = "http://127.0.0.1:8000";
+    let stats = { total: 0, block: 0, warn: 0, safe: 0 };
+
+    // --- Navigation ---
+    function setView(viewId, btn) {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+        
+        document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active');
+        
+        document.getElementById('page-title').innerText = viewId === 'dashboard' ? "Live Dashboard" : "Model Analytics";
+    }
+
+    // --- API Health ---
+    async function checkHealth() {
+        const ind = document.getElementById('api-indicator');
+        const txt = document.getElementById('api-text');
+        try {
+            await fetch(`${API_URL}/health`);
+            ind.classList.add('online');
+            txt.innerText = "System Online";
+        } catch {
+            ind.classList.remove('online');
+            txt.innerText = "API Disconnected";
+        }
+    }
+    checkHealth();
+
+    // --- Scanning Logic ---
+    async function scanText() {
+        const text = document.getElementById('inputText').value;
+        const btn = document.getElementById('scanBtn');
+        
+        if(!text.trim()) return;
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning...';
+
+        try {
+            const res = await fetch(`${API_URL}/scan`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({text})
+            });
+            const data = await res.json();
+
+            // Render Results
+            document.getElementById('resultBox').style.display = "block";
+            
+            // Policy Badge
+            const pBadge = document.getElementById('res-policy');
+            pBadge.className = `badge ${data.policy}`;
+            
+            if(data.policy === "BLOCK") pBadge.innerText = "BLOCK TRANSACTION";
+            else if(data.policy === "WARN") pBadge.innerText = "WARNING";
+            else pBadge.innerText = "ALLOWED";
+
+            document.getElementById('res-class').innerText = data.class;
+            document.getElementById('res-conf').innerText = (data.confidence * 100).toFixed(0) + "%";
+
+            // Flags
+            const setFlag = (id, active) => {
+                const el = document.getElementById(id);
+                el.className = active ? "flag active" : "flag";
+            };
+            setFlag('flag-email', data.flags.email);
+            setFlag('flag-phone', data.flags.phone);
+            setFlag('flag-addr', data.flags.address);
+
+            // Update Stats
+            stats.total++;
+            if(data.policy === "BLOCK") stats.block++;
+            else if(data.policy === "WARN") stats.warn++;
+            else stats.safe++;
+            
+            document.getElementById('count-total').innerText = stats.total;
+            document.getElementById('count-block').innerText = stats.block;
+            document.getElementById('count-warn').innerText = stats.warn;
+            document.getElementById('count-safe').innerText = stats.safe;
+
+        } catch (e) {
+            alert("Connection Failed: Ensure api.py is running.");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-magnifying-glass"></i> Analyze Text';
+        }
+    }
+
+    // --- Analytics Tab Logic ---
+    function loadShap(label, btn) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const img = document.getElementById('shap-img');
+        const loader = document.getElementById('loader');
+        const err = document.getElementById('error-msg');
+
+        img.style.display = 'none';
+        err.style.display = 'none';
+        loader.style.display = 'block';
+
+        const src = `${API_URL}/shap-plot/${label}?t=${Date.now()}`;
+        
+        img.onload = () => {
+            loader.style.display = 'none';
+            img.style.display = 'inline-block';
+        };
+        img.onerror = () => {
+            loader.style.display = 'none';
+            err.style.display = 'block';
+        };
+        img.src = src;
+    }
+    
+    // Preload
+    loadShap('EMAIL', document.querySelector('.tab-btn'));
+</script>
+
+</body>
+</html>
