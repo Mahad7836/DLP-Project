@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sentinel AI - DLP Command</title>
+<title>PII Detector</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -132,69 +132,163 @@
         height: calc(100vh - 140px);
     }
 
-    /* --- Risk Gauge Card (Left) --- */
+    /* --- IMPROVED Risk Gauge Card --- */
     .risk-card {
         background: var(--bg-panel);
         border: 1px solid var(--border);
         border-radius: 16px;
         padding: 24px;
-        grid-row: 1 / -1; /* Full height sidebar style */
+        grid-row: 1 / -1;
         display: flex;
         flex-direction: column;
         align-items: center;
         box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
 
-    .gauge-wrapper {
+    /* Gauge Container */
+    .gauge-container {
         position: relative;
-        width: 200px;
-        height: 120px; /* Half circle height */
-        margin-top: 20px;
-        overflow: hidden;
+        width: 220px;
+        height: 140px;
+        margin: 20px 0 30px;
     }
-    .gauge-bg {
-        width: 200px;
-        height: 200px;
-        border-radius: 50%;
-        background: conic-gradient(from 180deg, 
-            #ef4444 0deg 60deg,    /* Red */
-            #f59e0b 60deg 120deg,  /* Yellow */
-            #10b981 120deg 180deg, /* Green */
+
+    /* Gauge Background */
+    .gauge-background {
+        position: absolute;
+        width: 220px;
+        height: 110px;
+        border-radius: 110px 110px 0 0;
+        overflow: hidden;
+        background: conic-gradient(from 180deg at 50% 100%,
+            #ef4444 0deg,       /* Red - High Risk */
+            #f59e0b 60deg,      /* Yellow - Medium Risk */
+            #10b981 120deg,     /* Green - Low Risk */
             transparent 180deg
         );
-        transform: rotate(0deg); /* Start at red */
-        mask: radial-gradient(transparent 65%, black 66%);
-        -webkit-mask: radial-gradient(transparent 65%, black 66%);
+        mask: linear-gradient(to bottom, black 0%, transparent 100%);
+        -webkit-mask: linear-gradient(to bottom, black 0%, transparent 100%);
     }
+
+    /* Gauge ticks */
+    .gauge-ticks {
+        position: absolute;
+        width: 220px;
+        height: 110px;
+    }
+    .tick {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: 2px;
+        height: 10px;
+        background: rgba(255, 255, 255, 0.2);
+        transform-origin: bottom center;
+    }
+
     /* Needle */
     .needle {
         position: absolute;
         bottom: 0;
         left: 50%;
         width: 4px;
-        height: 90px;
-        background: white;
+        height: 100px;
+        background: linear-gradient(to top, #ffffff, #f1f5f9);
         transform-origin: bottom center;
-        transform: rotate(-90deg); /* Start pointing left (Red/High Risk) */
-        transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
-        border-radius: 4px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.5);
-        z-index: 2;
+        transform: translateX(-50%) rotate(-90deg);
+        transition: transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        border-radius: 4px 4px 0 0;
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+        z-index: 10;
     }
+    .needle::after {
+        content: '';
+        position: absolute;
+        top: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 12px;
+        height: 12px;
+        background: white;
+        border-radius: 50%;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+
+    /* Needle cap */
     .needle-cap {
         position: absolute;
-        bottom: -10px;
+        bottom: 0;
         left: 50%;
         transform: translateX(-50%);
         width: 20px;
         height: 20px;
-        background: white;
+        background: linear-gradient(145deg, #ffffff, #d1d5db);
         border-radius: 50%;
-        z-index: 3;
+        z-index: 11;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
     }
 
-    .risk-score { font-size: 3rem; font-weight: 800; margin-top: 10px; color: white; line-height: 1; }
-    .risk-label { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 24px; font-weight: 600; }
+    /* Risk zones labels */
+    .risk-zones {
+        position: absolute;
+        width: 100%;
+        bottom: -25px;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 15px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .zone-high { color: #ef4444; }
+    .zone-medium { color: #f59e0b; }
+    .zone-low { color: #10b981; }
+
+    /* Enhanced Score Display */
+    .risk-score-container {
+        text-align: center;
+        margin: 20px 0;
+    }
+    .risk-score {
+        font-size: 3.5rem;
+        font-weight: 800;
+        line-height: 1;
+        margin: 0;
+        background: linear-gradient(135deg, #ffffff, #94a3b8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    }
+    .score-percent {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-left: 4px;
+        opacity: 0.8;
+    }
+    .risk-label {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-top: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 6px 16px;
+        border-radius: 20px;
+        background: rgba(16, 185, 129, 0.1);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .risk-label.high {
+        background: rgba(239, 68, 68, 0.1);
+        color: #f87171;
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+    .risk-label.medium {
+        background: rgba(245, 158, 11, 0.1);
+        color: #fbbf24;
+        border-color: rgba(245, 158, 11, 0.3);
+    }
 
     .mini-stat {
         width: 100%;
@@ -205,9 +299,12 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        border-left: 3px solid var(--primary);
     }
     .ms-label { font-size: 0.8rem; color: var(--text-muted); }
     .ms-val { font-weight: 700; color: white; }
+    .mini-stat.blocked { border-left-color: #ef4444; }
+    .mini-stat.safe { border-left-color: #10b981; }
 
     /* --- Main Scanner Panel --- */
     .scanner-panel {
@@ -256,7 +353,7 @@
         margin-top: 32px;
         border-top: 1px solid var(--border);
         padding-top: 32px;
-        display: none; /* Hidden by default */
+        display: none;
         animation: fadeIn 0.4s ease;
     }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -294,6 +391,306 @@
         font-weight: 600;
     }
 
+    /* --- Policy Manager View --- */
+    .policy-manager {
+        background: var(--bg-panel);
+        border-radius: 16px;
+        padding: 32px;
+        border: 1px solid var(--border);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .policy-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+    }
+
+    .policy-controls {
+        display: flex;
+        gap: 12px;
+    }
+
+    .policy-btn {
+        background: var(--primary-dim);
+        color: var(--primary);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .policy-btn:hover {
+        background: rgba(59, 130, 246, 0.2);
+    }
+
+    .policy-btn.danger {
+        background: rgba(239, 68, 68, 0.1);
+        color: #f87171;
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .policy-btn.danger:hover {
+        background: rgba(239, 68, 68, 0.2);
+    }
+
+    /* Policy List */
+    .policy-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        overflow-y: auto;
+        flex: 1;
+        padding-right: 8px;
+    }
+
+    .policy-item {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: all 0.3s ease;
+    }
+
+    .policy-item.active {
+        border-color: var(--primary);
+        background: rgba(59, 130, 246, 0.05);
+    }
+
+    .policy-item.blocked {
+        border-color: #ef4444;
+        background: rgba(239, 68, 68, 0.05);
+    }
+
+    .policy-item.warning {
+        border-color: #f59e0b;
+        background: rgba(245, 158, 11, 0.05);
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+        position: relative;
+        width: 50px;
+        height: 26px;
+        flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.1);
+        transition: .4s;
+        border-radius: 34px;
+    }
+
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    input:checked + .toggle-slider {
+        background-color: var(--primary);
+    }
+
+    input:checked + .toggle-slider:before {
+        transform: translateX(24px);
+    }
+
+    /* Policy Details */
+    .policy-details {
+        flex: 1;
+    }
+
+    .policy-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 6px;
+    }
+
+    .policy-name {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: white;
+    }
+
+    .policy-tag {
+        font-size: 0.7rem;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .policy-tag.block { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+    .policy-tag.warn { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+    .policy-tag.allow { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+
+    .policy-description {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+    }
+
+    .policy-pattern {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 0.85rem;
+        color: #94a3b8;
+        word-break: break-all;
+    }
+
+    /* Add Policy Modal */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    .modal {
+        background: var(--bg-panel);
+        border-radius: 16px;
+        padding: 32px;
+        width: 500px;
+        max-width: 90%;
+        border: 1px solid var(--border);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+        margin-bottom: 24px;
+    }
+
+    .modal-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 0 8px 0;
+    }
+
+    .modal-subtitle {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--text-main);
+    }
+
+    .form-input, .form-select {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text-main);
+        font-family: 'Inter', sans-serif;
+        font-size: 0.95rem;
+    }
+
+    .form-input:focus, .form-select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px var(--primary-dim);
+    }
+
+    .form-hint {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-top: 6px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 32px;
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-main);
+        border: 1px solid var(--border);
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .btn-primary:hover {
+        background: #2563eb;
+    }
+
     /* --- Analytics View --- */
     .view-section { display: none; }
     .view-section.active { display: block; height: 100%; }
@@ -319,12 +716,15 @@
 
     <div class="sidebar">
         <div class="logo">
-            <i class="fas fa-shield-cat"></i> SENTINEL
+            <i class="fas fa-shield-cat"></i> PII Detector
         </div>
         
         <div class="nav-label">OPERATIONS</div>
         <div class="nav-item active" onclick="switchView('dashboard', this)">
             <i class="fas fa-radar"></i> Live Scanner
+        </div>
+        <div class="nav-item" onclick="switchView('policies', this)">
+            <i class="fas fa-shield-alt"></i> Policy Manager
         </div>
         <div class="nav-item" onclick="switchView('analytics', this)">
             <i class="fas fa-network-wired"></i> Threat Analysis
@@ -341,7 +741,7 @@
     <div class="main">
         <div class="header">
             <div>
-                <h1>Command Center</h1>
+                <h1>Dashboard</h1>
                 <div class="subtitle">Data Loss Prevention Monitoring & Response</div>
             </div>
             <div id="api-status" class="status-pill">
@@ -355,28 +755,40 @@
                 <div class="risk-card">
                     <div style="align-self: flex-start; width: 100%;">
                         <h3 style="margin:0; font-size:1.1rem;">Threat Index</h3>
-                        <p style="margin:4px 0 0; color:var(--text-muted); font-size:0.8rem;">Current Session Risk</p>
+                        <p style="margin:4px 0 0; color:var(--text-muted); font-size:0.8rem;">Overall Safety Score</p>
                     </div>
 
-                    <div class="gauge-wrapper">
-                        <div class="gauge-bg"></div>
+                    <!-- Enhanced Gauge -->
+                    <div class="gauge-container">
+                        <div class="gauge-background" id="gauge-bg"></div>
+                        <div class="gauge-ticks" id="gauge-ticks"></div>
                         <div class="needle" id="gauge-needle"></div>
                         <div class="needle-cap"></div>
+                        <div class="risk-zones">
+                            <span class="zone-high">HIGH</span>
+                            <span class="zone-medium">MED</span>
+                            <span class="zone-low">LOW</span>
+                        </div>
                     </div>
                     
-                    <div class="risk-score" id="risk-score-display">0</div>
-                    <div class="risk-label">SAFE</div>
+                    <!-- Enhanced Score Display -->
+                    <div class="risk-score-container">
+                        <div class="risk-score" id="risk-score-display">
+                            100<span class="score-percent">%</span>
+                        </div>
+                        <div class="risk-label" id="risk-label">SECURE</div>
+                    </div>
 
                     <div style="width:100%; margin-top:24px;">
                         <div class="mini-stat">
                             <span class="ms-label">Total Scans</span>
                             <span class="ms-val" id="stat-total">0</span>
                         </div>
-                        <div class="mini-stat" style="border-left: 3px solid #ef4444;">
+                        <div class="mini-stat blocked">
                             <span class="ms-label">Blocked</span>
                             <span class="ms-val" id="stat-block">0</span>
                         </div>
-                        <div class="mini-stat" style="border-left: 3px solid #10b981;">
+                        <div class="mini-stat safe">
                             <span class="ms-label">Safe</span>
                             <span class="ms-val" id="stat-safe">0</span>
                         </div>
@@ -388,7 +800,7 @@
                         <i class="fas fa-terminal" style="color:var(--primary);"></i> Input Stream
                     </h3>
                     
-                    <textarea id="inputText" class="input-area" placeholder="// Enter text for PII analysis (e.g. emails, logs, chat transcripts)..."></textarea>
+                    <textarea id="inputText" class="input-area" placeholder="Enter text for PII analysis"></textarea>
                     
                     <div class="action-row">
                         <button class="btn-scan" onclick="runScan()" id="scanBtn">
@@ -424,6 +836,30 @@
             </div>
         </div>
 
+        <!-- Policy Manager View -->
+        <div id="policies" class="view-section">
+            <div class="policy-manager">
+                <div class="policy-header">
+                    <div>
+                        <h2 style="margin:0; font-size:1.8rem;">Policy Manager</h2>
+                        <p style="margin:4px 0 0; color:var(--text-muted);">Configure rules for content detection and blocking</p>
+                    </div>
+                    <div class="policy-controls">
+                        <button class="policy-btn" onclick="showAddPolicyModal()">
+                            <i class="fas fa-plus"></i> Add Policy
+                        </button>
+                        <button class="policy-btn danger" onclick="resetToDefault()">
+                            <i class="fas fa-undo"></i> Reset Defaults
+                        </button>
+                    </div>
+                </div>
+
+                <div class="policy-list" id="policy-list">
+                    <!-- Policies will be loaded here -->
+                </div>
+            </div>
+        </div>
+
         <div id="analytics" class="view-section">
             <div class="analytics-panel">
                 <h2 style="margin-bottom:8px;">Neural Feature Importance</h2>
@@ -450,9 +886,146 @@
 
     </div>
 
+    <!-- Add Policy Modal -->
+    <div class="modal-overlay" id="add-policy-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Policy</h3>
+                <p class="modal-subtitle">Create custom rules for content detection</p>
+            </div>
+            
+            <form id="policy-form" onsubmit="return addNewPolicy(event)">
+                <div class="form-group">
+                    <label class="form-label">Policy Name</label>
+                    <input type="text" class="form-input" id="policy-name" placeholder="e.g., Block Gmail Domains" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Policy Type</label>
+                    <select class="form-select" id="policy-type" required>
+                        <option value="">Select type</option>
+                        <option value="email">Email Domain</option>
+                        <option value="phone">Phone Pattern</option>
+                        <option value="keyword">Keyword</option>
+                        <option value="regex">Custom Regex</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Pattern</label>
+                    <input type="text" class="form-input" id="policy-pattern" placeholder="e.g., @gmail\.com$" required>
+                    <div class="form-hint" id="pattern-hint">Enter regex pattern for detection</div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Action</label>
+                        <select class="form-select" id="policy-action" required>
+                            <option value="block">Block</option>
+                            <option value="warn">Warn</option>
+                            <option value="allow">Allow</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Severity</label>
+                        <select class="form-select" id="policy-severity" required>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-input" id="policy-description" rows="3" placeholder="Describe what this policy detects..."></textarea>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="hideAddPolicyModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Add Policy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 <script>
     const API = "http://127.0.0.1:8000";
     let stats = { total: 0, block: 0, safe: 0 };
+    let currentSafetyScore = 100;
+    let activePolicies = [];
+
+    // Default built-in policies
+    const defaultPolicies = [
+        {
+            id: 'policy-1',
+            name: 'Block Gmail Domains',
+            type: 'email',
+            pattern: '@gmail\\.com$',
+            action: 'block',
+            severity: 'high',
+            description: 'Blocks all emails from gmail.com domain',
+            active: true,
+            builtIn: true
+        },
+        {
+            id: 'policy-2',
+            name: 'Block Edu.PK Domains',
+            type: 'email',
+            pattern: '@.*\\.edu\\.pk$',
+            action: 'block',
+            severity: 'high',
+            description: 'Blocks educational emails from Pakistan',
+            active: true,
+            builtIn: true
+        },
+        {
+            id: 'policy-3',
+            name: 'Block Credit Card Numbers',
+            type: 'regex',
+            pattern: '\\b(?:\\d[ -]*?){13,16}\\b',
+            action: 'block',
+            severity: 'high',
+            description: 'Blocks credit card numbers (13-16 digits)',
+            active: true,
+            builtIn: true
+        },
+        {
+            id: 'policy-4',
+            name: 'Warn for Social Security',
+            type: 'regex',
+            pattern: '\\b\\d{3}-\\d{2}-\\d{4}\\b',
+            action: 'warn',
+            severity: 'medium',
+            description: 'Warns for Social Security Number patterns',
+            active: true,
+            builtIn: true
+        },
+        {
+            id: 'policy-5',
+            name: 'Allow Personal Email',
+            type: 'email',
+            pattern: '@personal\\.com$',
+            action: 'allow',
+            severity: 'low',
+            description: 'Always allow emails from personal.com domain',
+            active: true,
+            builtIn: true
+        }
+    ];
+
+    // Initialize gauge ticks
+    function initGauge() {
+        const ticksContainer = document.getElementById('gauge-ticks');
+        // Create 13 ticks (0-12, representing 0-120 degrees)
+        for (let i = 0; i <= 12; i++) {
+            const tick = document.createElement('div');
+            tick.className = 'tick';
+            tick.style.transform = `translateX(-50%) rotate(${i * 10}deg)`;
+            ticksContainer.appendChild(tick);
+        }
+    }
 
     // Navigation
     function switchView(viewId, btn) {
@@ -460,6 +1033,160 @@
         document.getElementById(viewId).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
         btn.classList.add('active');
+        
+        if (viewId === 'policies') {
+            loadPolicies();
+        }
+    }
+
+    // Load and display policies
+    function loadPolicies() {
+        const policyList = document.getElementById('policy-list');
+        policyList.innerHTML = '';
+        
+        activePolicies.forEach(policy => {
+            const policyItem = document.createElement('div');
+            policyItem.className = `policy-item ${policy.active ? 'active' : ''} ${policy.action}`;
+            policyItem.id = policy.id;
+            
+            const tagClass = policy.action === 'block' ? 'block' : 
+                           policy.action === 'warn' ? 'warn' : 'allow';
+            
+            policyItem.innerHTML = `
+                <div class="toggle-switch">
+                    <input type="checkbox" ${policy.active ? 'checked' : ''} onchange="togglePolicy('${policy.id}', this.checked)">
+                    <span class="toggle-slider"></span>
+                </div>
+                <div class="policy-details">
+                    <div class="policy-title">
+                        <span class="policy-name">${policy.name}</span>
+                        <span class="policy-tag ${tagClass}">${policy.action.toUpperCase()}</span>
+                        ${policy.builtIn ? '<span class="policy-tag" style="background:rgba(59,130,246,0.2);color:#93c5fd;">BUILT-IN</span>' : ''}
+                    </div>
+                    <p class="policy-description">${policy.description}</p>
+                    <div class="policy-pattern">Pattern: ${policy.pattern}</div>
+                </div>
+                <button class="policy-btn danger" onclick="deletePolicy('${policy.id}')" ${policy.builtIn ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            
+            policyList.appendChild(policyItem);
+        });
+    }
+
+    // Toggle policy activation
+    function togglePolicy(policyId, isActive) {
+        const policy = activePolicies.find(p => p.id === policyId);
+        if (policy) {
+            policy.active = isActive;
+            savePolicies();
+            
+            // Update UI
+            const policyItem = document.getElementById(policyId);
+            if (policyItem) {
+                policyItem.classList.toggle('active', isActive);
+            }
+        }
+    }
+
+    // Delete policy (only for custom ones)
+    function deletePolicy(policyId) {
+        const policy = activePolicies.find(p => p.id === policyId);
+        if (policy && !policy.builtIn) {
+            activePolicies = activePolicies.filter(p => p.id !== policyId);
+            savePolicies();
+            loadPolicies();
+        }
+    }
+
+    // Add new policy
+    function addNewPolicy(event) {
+        event.preventDefault();
+        
+        const newPolicy = {
+            id: 'custom-' + Date.now(),
+            name: document.getElementById('policy-name').value,
+            type: document.getElementById('policy-type').value,
+            pattern: document.getElementById('policy-pattern').value,
+            action: document.getElementById('policy-action').value,
+            severity: document.getElementById('policy-severity').value,
+            description: document.getElementById('policy-description').value || 'Custom policy rule',
+            active: true,
+            builtIn: false
+        };
+        
+        activePolicies.push(newPolicy);
+        savePolicies();
+        hideAddPolicyModal();
+        loadPolicies();
+        
+        // Reset form
+        document.getElementById('policy-form').reset();
+    }
+
+    // Reset to default policies
+    function resetToDefault() {
+        if (confirm('Reset to default policies? This will remove all custom policies.')) {
+            activePolicies = JSON.parse(JSON.stringify(defaultPolicies));
+            savePolicies();
+            loadPolicies();
+        }
+    }
+
+    // Save policies to localStorage
+    function savePolicies() {
+        localStorage.setItem('dlp_policies', JSON.stringify(activePolicies));
+    }
+
+    // Load policies from localStorage
+    function loadSavedPolicies() {
+        const saved = localStorage.getItem('dlp_policies');
+        if (saved) {
+            activePolicies = JSON.parse(saved);
+        } else {
+            activePolicies = JSON.parse(JSON.stringify(defaultPolicies));
+            savePolicies();
+        }
+    }
+
+    // Modal functions
+    function showAddPolicyModal() {
+        document.getElementById('add-policy-modal').classList.add('active');
+    }
+
+    function hideAddPolicyModal() {
+        document.getElementById('add-policy-modal').classList.remove('active');
+        document.getElementById('policy-form').reset();
+    }
+
+    // Apply policies to scan results
+    function applyPolicies(text, apiResult) {
+        let result = { ...apiResult };
+        
+        // Check against active policies
+        for (const policy of activePolicies.filter(p => p.active)) {
+            try {
+                const regex = new RegExp(policy.pattern, 'i');
+                if (regex.test(text)) {
+                    // Policy matched, override API result
+                    result.policy = policy.action.toUpperCase();
+                    result.class = policy.name;
+                    result.confidence = policy.severity === 'high' ? 0.95 : 
+                                      policy.severity === 'medium' ? 0.75 : 0.5;
+                    
+                    // Update flags based on policy type
+                    if (policy.type === 'email') result.flags.email = true;
+                    if (policy.type === 'phone') result.flags.phone = true;
+                    
+                    break; // First matching policy wins
+                }
+            } catch (e) {
+                console.error('Invalid regex in policy:', policy.pattern);
+            }
+        }
+        
+        return result;
     }
 
     // Health Check
@@ -472,6 +1199,12 @@
         } catch {
             pill.innerHTML = '<div class="dot" style="background:#ef4444; box-shadow:none;"></div> Offline';
         }
+        
+        // Initialize gauge ticks
+        initGauge();
+        
+        // Load saved policies
+        loadSavedPolicies();
     }
     init();
 
@@ -480,7 +1213,10 @@
         const text = document.getElementById('inputText').value;
         const btn = document.getElementById('scanBtn');
         
-        if(!text.trim()) return;
+        if(!text.trim()) {
+            alert("Please enter text to analyze");
+            return;
+        }
         
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESSING...';
@@ -491,7 +1227,15 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({text})
             });
-            const data = await res.json();
+            
+            if (!res.ok) {
+                throw new Error(`API Error: ${res.status}`);
+            }
+            
+            let data = await res.json();
+            
+            // Apply active policies to the result
+            data = applyPolicies(text, data);
 
             // Show Results
             document.getElementById('results-area').style.display = 'block';
@@ -499,7 +1243,8 @@
             // 1. Update Badge
             const badge = document.getElementById('res-policy');
             badge.className = `badge ${data.policy}`;
-            badge.innerText = data.policy === "BLOCK" ? "THREAT BLOCKED" : (data.policy === "WARN" ? "WARNING" : "SAFE ALLOWED");
+            badge.innerText = data.policy === "BLOCK" ? "THREAT BLOCKED" : 
+                            (data.policy === "WARN" ? "WARNING" : "SAFE ALLOWED");
 
             // 2. Update Details
             document.getElementById('res-class').innerText = data.class;
@@ -515,19 +1260,19 @@
             setFlag('flag-addr', data.flags.address);
 
             // 4. Update Stats & Gauge
-            updateStats(data.policy, data.confidence);
+            updateStatsAndGauge(data.policy, data.confidence);
 
         } catch (e) {
-            console.error(e);
-            alert("Scan failed. Check API.");
+            console.error('Scan failed:', e);
+            alert("Scan failed. Please check if the API server is running.");
         } finally {
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-search"></i> ANALYZE TEXT';
         }
     }
 
-    // Stats & Gauge Logic
-    function updateStats(policy, confidence) {
+    // Enhanced Stats & Gauge Logic
+    function updateStatsAndGauge(policy, confidence) {
         stats.total++;
         if(policy === 'BLOCK') stats.block++;
         else if(policy === 'ALLOW') stats.safe++;
@@ -536,38 +1281,65 @@
         document.getElementById('stat-block').innerText = stats.block;
         document.getElementById('stat-safe').innerText = stats.safe;
 
-        // Animate Gauge Needle
-        const needle = document.getElementById('gauge-needle');
-        const scoreDisplay = document.getElementById('risk-score-display');
+        // Update Safety Score based on policy
+        let safetyPercentage;
+        let riskLevel;
         
-        // Map confidence/policy to angle (-90deg to +90deg)
-        // High Risk (Red) = -90deg (Left)
-        // Low Risk (Green) = +90deg (Right)
-        
-        let angle = 90; // Default Safe (Green)
-        let score = 0;
-
-        if (policy === 'BLOCK') {
-            // High Risk -> Move to Red (Left side)
-            angle = -90 + (Math.random() * 20); // Random flutter in red zone
-            score = 800 + Math.floor(Math.random() * 200);
-        } else if (policy === 'WARN') {
-            // Med Risk -> Move to Yellow (Top/Center)
-            angle = 0 + (Math.random() * 20 - 10);
-            score = 400 + Math.floor(Math.random() * 200);
-        } else {
-            // Safe -> Move to Green (Right side)
-            angle = 90 - (Math.random() * 20);
-            score = Math.floor(Math.random() * 200);
+        switch(policy) {
+            case 'BLOCK':
+                // High risk: 0-30% safe
+                safetyPercentage = Math.max(0, Math.min(30, Math.random() * 30));
+                riskLevel = 'high';
+                break;
+            case 'WARN':
+                // Medium risk: 31-70% safe
+                safetyPercentage = 30 + Math.random() * 40;
+                riskLevel = 'medium';
+                break;
+            case 'ALLOW':
+                // Low risk: 71-100% safe (with confidence adjustment)
+                safetyPercentage = 70 + (confidence * 30);
+                riskLevel = 'low';
+                break;
+            default:
+                safetyPercentage = 100;
+                riskLevel = 'low';
         }
 
-        needle.style.transform = `rotate(${angle}deg)`;
-        scoreDisplay.innerText = score;
+        // Apply exponential moving average for smooth transitions
+        currentSafetyScore = (currentSafetyScore * 0.7) + (safetyPercentage * 0.3);
+        const displayScore = Math.round(currentSafetyScore);
+
+        // Update gauge needle position (0-120 degrees where 0 = 0%, 120 = 100%)
+        const needle = document.getElementById('gauge-needle');
+        const angle = -90 + (currentSafetyScore * 1.2); // -90 to +30 degrees
+        needle.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+
+        // Update score display
+        const scoreDisplay = document.getElementById('risk-score-display');
+        scoreDisplay.innerHTML = `${displayScore}<span class="score-percent">%</span>`;
         
-        // Color code the score text
-        if(score > 700) scoreDisplay.style.color = '#ef4444';
-        else if(score > 300) scoreDisplay.style.color = '#f59e0b';
-        else scoreDisplay.style.color = '#10b981';
+        // Update risk label
+        const riskLabel = document.getElementById('risk-label');
+        riskLabel.textContent = displayScore >= 70 ? 'SECURE' : 
+                               displayScore >= 40 ? 'WARNING' : 'THREAT';
+        
+        // Update label color and class
+        if (displayScore >= 70) {
+            scoreDisplay.style.background = 'linear-gradient(135deg, #10b981, #34d399)';
+            riskLabel.className = 'risk-label';
+        } else if (displayScore >= 40) {
+            scoreDisplay.style.background = 'linear-gradient(135deg, #f59e0b, #fbbf24)';
+            riskLabel.className = 'risk-label medium';
+        } else {
+            scoreDisplay.style.background = 'linear-gradient(135deg, #ef4444, #f87171)';
+            riskLabel.className = 'risk-label high';
+        }
+        
+        // Apply the gradient to text
+        scoreDisplay.style.webkitBackgroundClip = 'text';
+        scoreDisplay.style.webkitTextFillColor = 'transparent';
+        scoreDisplay.style.backgroundClip = 'text';
     }
 
     // Analytics Image Loader
@@ -596,7 +1368,7 @@
         img.src = src;
     }
     
-    // Init
+    // Initialize with default tab
     loadShap('EMAIL', document.querySelector('.tab-btn'));
 
 </script>
