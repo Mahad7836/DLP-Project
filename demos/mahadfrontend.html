@@ -3,82 +3,315 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sentinel AI - DLP Dashboard</title>
+<title>Sentinel AI - DLP Command</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
     :root {
-        --primary: #2563eb;
-        --sidebar-bg: #0f172a;
-        --bg-color: #f1f5f9;
-        --card-bg: #ffffff;
-        --text-main: #1e293b;
-        --text-muted: #64748b;
-        --success: #10b981;
-        --danger: #ef4444;
-        --warn: #f59e0b;
+        --primary: #3b82f6;       /* Neon Blue */
+        --primary-dim: rgba(59, 130, 246, 0.1);
+        --accent: #06b6d4;        /* Cyan */
+        --success: #10b981;       /* Emerald */
+        --danger: #ef4444;        /* Red */
+        --warn: #f59e0b;          /* Amber */
+        
+        --bg-dark: #0f172a;       /* Deep Slate */
+        --bg-panel: #1e293b;      /* Panel Slate */
+        --bg-sidebar: #020617;    /* Darkest Slate */
+        
+        --text-main: #f1f5f9;     /* White/Grey */
+        --text-muted: #94a3b8;    /* Muted Grey */
+        
+        --border: rgba(255, 255, 255, 0.08);
+        --glass: rgba(30, 41, 59, 0.7);
     }
 
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+    * { box-sizing: border-box; transition: all 0.2s ease; }
+    
+    body { 
+        margin: 0; 
+        font-family: 'Inter', sans-serif; 
+        background-color: var(--bg-dark); 
+        color: var(--text-main); 
+        height: 100vh; 
+        overflow: hidden; 
+        display: flex;
+    }
 
     /* --- Sidebar --- */
-    .sidebar { width: 260px; background: var(--sidebar-bg); color: white; display: flex; flex-direction: column; padding: 20px; flex-shrink: 0; }
-    .logo { font-size: 1.25rem; font-weight: 700; margin-bottom: 40px; display: flex; align-items: center; gap: 10px; color: #38bdf8; }
-    .menu-item { padding: 12px 16px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; color: #94a3b8; transition: 0.2s; display: flex; align-items: center; gap: 12px; }
-    .menu-item:hover, .menu-item.active { background: #1e293b; color: white; }
-    .menu-item.active { border-left: 4px solid var(--primary); }
+    .sidebar { 
+        width: 260px; 
+        background: var(--bg-sidebar); 
+        border-right: 1px solid var(--border);
+        display: flex; 
+        flex-direction: column; 
+        padding: 24px; 
+        z-index: 20;
+    }
 
-    /* --- Main Content --- */
-    .main { flex: 1; padding: 32px; overflow-y: auto; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
-    .status-badge { font-size: 0.85rem; padding: 6px 12px; border-radius: 20px; background: #e2e8f0; color: #64748b; display: flex; align-items: center; gap: 6px; }
-    .status-badge.online { background: #dcfce7; color: #166534; }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+    .logo { 
+        font-size: 1.4rem; 
+        font-weight: 800; 
+        letter-spacing: -0.5px;
+        margin-bottom: 40px; 
+        display: flex; 
+        align-items: center; 
+        gap: 12px; 
+        color: white;
+    }
+    .logo i { color: var(--primary); filter: drop-shadow(0 0 8px var(--primary)); }
 
-    /* --- Stats Grid --- */
-    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 32px; }
-    .card { background: var(--card-bg); padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-    .stat-val { font-size: 2rem; font-weight: 700; margin-top: 8px; }
-    .stat-label { color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
-    .card.border-blue { border-top: 4px solid var(--primary); }
-    .card.border-red { border-top: 4px solid var(--danger); }
-    .card.border-yellow { border-top: 4px solid var(--warn); }
-    .card.border-green { border-top: 4px solid var(--success); }
+    .nav-label { 
+        font-size: 0.7rem; 
+        text-transform: uppercase; 
+        letter-spacing: 1.5px; 
+        color: var(--text-muted); 
+        margin-bottom: 16px; 
+        font-weight: 700;
+        opacity: 0.6;
+    }
 
-    /* --- Scanner Section --- */
-    .panel { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 24px; margin-bottom: 24px; }
-    textarea { width: 100%; height: 120px; padding: 16px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 1rem; resize: vertical; margin-bottom: 16px; transition: 0.2s; }
-    textarea:focus { outline: none; border-color: var(--primary); ring: 2px var(--primary); }
+    .nav-item { 
+        padding: 12px 16px; 
+        margin-bottom: 8px; 
+        border-radius: 8px; 
+        cursor: pointer; 
+        color: var(--text-muted); 
+        display: flex; 
+        align-items: center; 
+        gap: 12px; 
+        font-weight: 500;
+        border: 1px solid transparent;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+    .nav-item.active { 
+        background: var(--primary-dim); 
+        color: var(--primary); 
+        border-color: rgba(59, 130, 246, 0.2);
+    }
+
+    /* --- Main Area --- */
+    .main { 
+        flex: 1; 
+        padding: 32px; 
+        overflow-y: auto; 
+        background: radial-gradient(circle at top right, #1e293b 0%, #0f172a 40%);
+    }
     
-    button { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; font-size: 1rem; }
-    button:hover { background: #1d4ed8; transform: translateY(-1px); }
-    button:disabled { opacity: 0.7; cursor: not-allowed; }
-
-    /* --- Results --- */
-    .result-box { margin-top: 24px; padding-top: 24px; border-top: 1px solid #e2e8f0; display: none; }
-    .result-header { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
-    .badge { padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; letter-spacing: 0.05em; text-transform: uppercase; }
-    .BLOCK { background: #fee2e2; color: #991b1b; }
-    .WARN { background: #ffedd5; color: #9a3412; }
-    .ALLOW { background: #dcfce7; color: #166534; }
+    .header { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: flex-end; 
+        margin-bottom: 32px; 
+    }
     
-    .flag-container { display: flex; gap: 12px; }
-    .flag { font-size: 0.8rem; padding: 4px 10px; border-radius: 20px; background: #f1f5f9; color: #64748b; }
-    .flag.active { background: #fee2e2; color: #ef4444; font-weight: 600; }
+    h1 { margin: 0; font-size: 1.8rem; font-weight: 700; letter-spacing: -1px; }
+    .subtitle { color: var(--text-muted); margin-top: 6px; font-size: 0.9rem; }
 
-    /* --- Analytics Tab --- */
+    .status-pill {
+        background: #1e293b;
+        border: 1px solid var(--border);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-muted);
+    }
+    .status-pill.online { border-color: rgba(16, 185, 129, 0.3); color: #34d399; }
+    .dot { width: 8px; height: 8px; background: currentColor; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
+
+    /* --- Dashboard Grid --- */
+    .grid-container {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        grid-template-rows: auto 1fr;
+        gap: 24px;
+        height: calc(100vh - 140px);
+    }
+
+    /* --- Risk Gauge Card (Left) --- */
+    .risk-card {
+        background: var(--bg-panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 24px;
+        grid-row: 1 / -1; /* Full height sidebar style */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .gauge-wrapper {
+        position: relative;
+        width: 200px;
+        height: 120px; /* Half circle height */
+        margin-top: 20px;
+        overflow: hidden;
+    }
+    .gauge-bg {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        background: conic-gradient(from 180deg, 
+            #ef4444 0deg 60deg,    /* Red */
+            #f59e0b 60deg 120deg,  /* Yellow */
+            #10b981 120deg 180deg, /* Green */
+            transparent 180deg
+        );
+        transform: rotate(0deg); /* Start at red */
+        mask: radial-gradient(transparent 65%, black 66%);
+        -webkit-mask: radial-gradient(transparent 65%, black 66%);
+    }
+    /* Needle */
+    .needle {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: 4px;
+        height: 90px;
+        background: white;
+        transform-origin: bottom center;
+        transform: rotate(-90deg); /* Start pointing left (Red/High Risk) */
+        transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 4px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        z-index: 2;
+    }
+    .needle-cap {
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 20px;
+        height: 20px;
+        background: white;
+        border-radius: 50%;
+        z-index: 3;
+    }
+
+    .risk-score { font-size: 3rem; font-weight: 800; margin-top: 10px; color: white; line-height: 1; }
+    .risk-label { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 24px; font-weight: 600; }
+
+    .mini-stat {
+        width: 100%;
+        background: rgba(255,255,255,0.03);
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .ms-label { font-size: 0.8rem; color: var(--text-muted); }
+    .ms-val { font-weight: 700; color: white; }
+
+    /* --- Main Scanner Panel --- */
+    .scanner-panel {
+        background: var(--bg-panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 32px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .input-area {
+        width: 100%;
+        background: #0f172a;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        color: var(--text-main);
+        font-family: 'Inter', monospace;
+        font-size: 1rem;
+        resize: none;
+        height: 150px;
+        margin-bottom: 24px;
+    }
+    .input-area:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-dim); }
+
+    .action-row { display: flex; justify-content: flex-end; }
+    
+    .btn-scan {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 14px 32px;
+        border-radius: 8px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1rem;
+    }
+    .btn-scan:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
+
+    /* --- Results Section --- */
+    .results-wrap {
+        margin-top: 32px;
+        border-top: 1px solid var(--border);
+        padding-top: 32px;
+        display: none; /* Hidden by default */
+        animation: fadeIn 0.4s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .res-header { display: flex; gap: 40px; margin-bottom: 24px; }
+    
+    .res-item h4 { margin: 0 0 8px 0; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .res-value { font-size: 1.5rem; font-weight: 700; color: white; }
+
+    .badge { padding: 6px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+    .badge.BLOCK { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4); }
+    .badge.WARN { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.4); }
+    .badge.ALLOW { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); }
+
+    .flags-box {
+        background: rgba(0,0,0,0.2);
+        padding: 16px;
+        border-radius: 8px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+    .flag-pill {
+        font-size: 0.8rem;
+        padding: 4px 12px;
+        border-radius: 20px;
+        background: rgba(255,255,255,0.05);
+        color: var(--text-muted);
+        border: 1px solid transparent;
+    }
+    .flag-pill.active {
+        background: rgba(239, 68, 68, 0.15);
+        color: #fca5a5;
+        border-color: rgba(239, 68, 68, 0.3);
+        font-weight: 600;
+    }
+
+    /* --- Analytics View --- */
     .view-section { display: none; }
-    .view-section.active { display: block; }
-    
-    .tab-nav { display: flex; gap: 16px; border-bottom: 2px solid #e2e8f0; margin-bottom: 24px; }
-    .tab-btn { padding: 12px 0; background: none; border: none; color: var(--text-muted); cursor: pointer; font-weight: 600; position: relative; border-radius: 0; }
-    .tab-btn:hover { color: var(--primary); }
-    .tab-btn.active { color: var(--primary); }
-    .tab-btn.active::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 100%; height: 2px; background: var(--primary); }
+    .view-section.active { display: block; height: 100%; }
 
-    .chart-wrapper { text-align: center; background: #f8fafc; padding: 24px; border-radius: 12px; border: 1px dashed #cbd5e1; }
-    .chart-img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .analytics-panel {
+        background: var(--bg-panel);
+        border-radius: 16px;
+        padding: 32px;
+        border: 1px solid var(--border);
+        text-align: center;
+    }
+    
+    .tabs { display: flex; justify-content: center; gap: 16px; margin-bottom: 32px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+    .tab-btn { background: none; border: none; color: var(--text-muted); font-size: 1rem; cursor: pointer; padding: 8px 16px; font-weight: 600; }
+    .tab-btn:hover { color: white; }
+    .tab-btn.active { color: var(--primary); border-bottom: 2px solid var(--primary); }
+
+    .chart-img { max-width: 90%; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border: 1px solid var(--border); }
 
 </style>
 </head>
@@ -86,105 +319,131 @@
 
     <div class="sidebar">
         <div class="logo">
-            <i class="fas fa-shield-halved"></i> SENTINEL DLP
+            <i class="fas fa-shield-cat"></i> SENTINEL
         </div>
-        <div class="menu-item active" onclick="setView('dashboard', this)">
-            <i class="fas fa-gauge-high"></i> Dashboard
+        
+        <div class="nav-label">OPERATIONS</div>
+        <div class="nav-item active" onclick="switchView('dashboard', this)">
+            <i class="fas fa-radar"></i> Live Scanner
         </div>
-        <div class="menu-item" onclick="setView('analytics', this)">
-            <i class="fas fa-microscope"></i> AI Explainability
+        <div class="nav-item" onclick="switchView('analytics', this)">
+            <i class="fas fa-network-wired"></i> Threat Analysis
         </div>
-        <div style="margin-top: auto; font-size: 0.8rem; color: #475569;">
-            v2.2 Updated Engine
+
+        <div style="margin-top: auto;">
+            <div style="padding:16px; background:rgba(255,255,255,0.03); border-radius:12px; border:1px solid var(--border);">
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">ENGINE STATUS</div>
+                <div style="color:#34d399; font-weight:700; font-size:0.9rem;">● ACTIVE v2.5</div>
+            </div>
         </div>
     </div>
 
     <div class="main">
         <div class="header">
-            <h2 id="page-title">Live Dashboard</h2>
-            <div id="api-indicator" class="status-badge">
-                <div class="status-dot"></div> <span id="api-text">Connecting...</span>
+            <div>
+                <h1>Command Center</h1>
+                <div class="subtitle">Data Loss Prevention Monitoring & Response</div>
+            </div>
+            <div id="api-status" class="status-pill">
+                <div class="dot"></div> Connecting...
             </div>
         </div>
 
         <div id="dashboard" class="view-section active">
-            <div class="grid">
-                <div class="card border-blue">
-                    <div class="stat-label">TOTAL SCANS</div>
-                    <div class="stat-val" id="count-total">0</div>
-                </div>
-                <div class="card border-red">
-                    <div class="stat-label">BLOCKED (PII)</div>
-                    <div class="stat-val" id="count-block">0</div>
-                </div>
-                <div class="card border-yellow">
-                    <div class="stat-label">WARNINGS</div>
-                    <div class="stat-val" id="count-warn">0</div>
-                </div>
-                <div class="card border-green">
-                    <div class="stat-label">SAFE TRAFFIC</div>
-                    <div class="stat-val" id="count-safe">0</div>
-                </div>
-            </div>
-
-            <div class="panel">
-                <h3 style="margin-top:0"><i class="fas fa-keyboard"></i> Live Text Scanner</h3>
-                <p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:16px;">
-                    Paste email bodies, chat logs, or documents here. The XGBoost model will analyze PII sensitivity in real-time.
-                </p>
-                <textarea id="inputText" placeholder="Example: Please reach out to me at +92 300 1234567 regarding the project details..."></textarea>
-                <div style="text-align: right;">
-                    <button onclick="scanText()" id="scanBtn">
-                        <i class="fas fa-magnifying-glass"></i> Analyze Text
-                    </button>
-                </div>
-
-                <div id="resultBox" class="result-box">
-                    <div class="result-header">
-                        <div>
-                            <span style="display:block; font-size:0.8rem; color:#64748b; margin-bottom:4px;">POLICY ACTION</span>
-                            <span id="res-policy" class="badge">--</span>
-                        </div>
-                        <div style="border-left:1px solid #e2e8f0; padding-left:16px;">
-                            <span style="display:block; font-size:0.8rem; color:#64748b; margin-bottom:4px;">DETECTED CLASS</span>
-                            <span id="res-class" style="font-weight:700; font-size:1.1rem;">--</span>
-                        </div>
-                        <div style="border-left:1px solid #e2e8f0; padding-left:16px;">
-                            <span style="display:block; font-size:0.8rem; color:#64748b; margin-bottom:4px;">CONFIDENCE</span>
-                            <span id="res-conf" style="font-weight:700; font-size:1.1rem;">--</span>
-                        </div>
+            <div class="grid-container">
+                
+                <div class="risk-card">
+                    <div style="align-self: flex-start; width: 100%;">
+                        <h3 style="margin:0; font-size:1.1rem;">Threat Index</h3>
+                        <p style="margin:4px 0 0; color:var(--text-muted); font-size:0.8rem;">Current Session Risk</p>
                     </div>
 
-                    <div style="background: #f8fafc; padding: 12px; border-radius: 8px;">
-                        <span style="font-size:0.85rem; font-weight:600; color:#475569; margin-right:8px;">REGEX TRIGGERS:</span>
-                        <span id="flag-email" class="flag">Email</span>
-                        <span id="flag-phone" class="flag">Phone</span>
-                        <span id="flag-addr" class="flag">Address</span>
+                    <div class="gauge-wrapper">
+                        <div class="gauge-bg"></div>
+                        <div class="needle" id="gauge-needle"></div>
+                        <div class="needle-cap"></div>
+                    </div>
+                    
+                    <div class="risk-score" id="risk-score-display">0</div>
+                    <div class="risk-label">SAFE</div>
+
+                    <div style="width:100%; margin-top:24px;">
+                        <div class="mini-stat">
+                            <span class="ms-label">Total Scans</span>
+                            <span class="ms-val" id="stat-total">0</span>
+                        </div>
+                        <div class="mini-stat" style="border-left: 3px solid #ef4444;">
+                            <span class="ms-label">Blocked</span>
+                            <span class="ms-val" id="stat-block">0</span>
+                        </div>
+                        <div class="mini-stat" style="border-left: 3px solid #10b981;">
+                            <span class="ms-label">Safe</span>
+                            <span class="ms-val" id="stat-safe">0</span>
+                        </div>
                     </div>
                 </div>
+
+                <div class="scanner-panel">
+                    <h3 style="margin-top:0; margin-bottom:16px; display:flex; align-items:center; gap:10px;">
+                        <i class="fas fa-terminal" style="color:var(--primary);"></i> Input Stream
+                    </h3>
+                    
+                    <textarea id="inputText" class="input-area" placeholder="// Enter text for PII analysis (e.g. emails, logs, chat transcripts)..."></textarea>
+                    
+                    <div class="action-row">
+                        <button class="btn-scan" onclick="runScan()" id="scanBtn">
+                            <i class="fas fa-search"></i> ANALYZE TEXT
+                        </button>
+                    </div>
+
+                    <div id="results-area" class="results-wrap">
+                        <div class="res-header">
+                            <div class="res-item">
+                                <h4>Policy Action</h4>
+                                <span id="res-policy" class="badge">--</span>
+                            </div>
+                            <div class="res-item">
+                                <h4>Classification</h4>
+                                <div class="res-value" id="res-class">--</div>
+                            </div>
+                            <div class="res-item">
+                                <h4>Confidence</h4>
+                                <div class="res-value" id="res-conf">--</div>
+                            </div>
+                        </div>
+
+                        <div class="flags-box">
+                            <span style="font-size:0.8rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Detectors:</span>
+                            <span id="flag-email" class="flag-pill">Email Regex</span>
+                            <span id="flag-phone" class="flag-pill">Phone Pattern</span>
+                            <span id="flag-addr" class="flag-pill">Address Entity</span>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
         <div id="analytics" class="view-section">
-            <div class="panel">
-                <h3><i class="fas fa-brain"></i> SHAP Model Explanations</h3>
-                <p style="color:var(--text-muted);">See exactly which words trigger the AI for specific categories.</p>
-                
-                <div class="tab-nav">
-                    <button class="tab-btn active" onclick="loadShap('EMAIL', this)">Email Logic</button>
-                    <button class="tab-btn" onclick="loadShap('PHONE', this)">Phone Logic</button>
-                    <button class="tab-btn" onclick="loadShap('ADDRESS', this)">Address Logic</button>
-                    <button class="tab-btn" onclick="loadShap('NONE', this)">Safe Logic</button>
+            <div class="analytics-panel">
+                <h2 style="margin-bottom:8px;">Neural Feature Importance</h2>
+                <p style="color:var(--text-muted); margin-bottom:32px;">SHAP (SHapley Additive exPlanations) visualizer for XGBoost model decisions.</p>
+
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="loadShap('EMAIL', this)">Email Vector</button>
+                    <button class="tab-btn" onclick="loadShap('PHONE', this)">Phone Vector</button>
+                    <button class="tab-btn" onclick="loadShap('ADDRESS', this)">Address Vector</button>
+                    <button class="tab-btn" onclick="loadShap('NONE', this)">Safe Vector</button>
                 </div>
 
-                <div class="chart-wrapper">
-                    <div id="loader" style="display:none; color:var(--primary); padding:40px;">
-                        <i class="fas fa-circle-notch fa-spin fa-2x"></i><br>Loading Analysis...
-                    </div>
-                    <img id="shap-img" class="chart-img" src="" alt="Select a tab to view">
-                    <div id="error-msg" style="display:none; color:var(--danger); padding:20px;">
-                        <i class="fas fa-exclamation-circle"></i> SHAP Plot not found. Please run the training script first.
-                    </div>
+                <div id="loader" style="display:none; padding:40px; color:var(--primary);">
+                    <i class="fas fa-circle-notch fa-spin fa-2x"></i>
+                </div>
+                
+                <img id="shap-img" class="chart-img" src="" alt="Select a tab" onerror="this.style.display='none'; document.getElementById('err-msg').style.display='block';">
+                
+                <div id="err-msg" style="display:none; color:var(--danger); margin-top:20px;">
+                    <i class="fas fa-exclamation-triangle"></i> Visualization not found. Ensure backend training is complete.
                 </div>
             </div>
         </div>
@@ -192,109 +451,139 @@
     </div>
 
 <script>
-    const API_URL = "http://127.0.0.1:8000";
-    let stats = { total: 0, block: 0, warn: 0, safe: 0 };
+    const API = "http://127.0.0.1:8000";
+    let stats = { total: 0, block: 0, safe: 0 };
 
-    // --- Navigation ---
-    function setView(viewId, btn) {
+    // Navigation
+    function switchView(viewId, btn) {
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         document.getElementById(viewId).classList.add('active');
-        
-        document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
         btn.classList.add('active');
-        
-        document.getElementById('page-title').innerText = viewId === 'dashboard' ? "Live Dashboard" : "Model Analytics";
     }
 
-    // --- API Health ---
-    async function checkHealth() {
-        const ind = document.getElementById('api-indicator');
-        const txt = document.getElementById('api-text');
+    // Health Check
+    async function init() {
+        const pill = document.getElementById('api-status');
         try {
-            await fetch(`${API_URL}/health`);
-            ind.classList.add('online');
-            txt.innerText = "System Online";
+            await fetch(`${API}/health`);
+            pill.innerHTML = '<div class="dot"></div> System Online';
+            pill.classList.add('online');
         } catch {
-            ind.classList.remove('online');
-            txt.innerText = "API Disconnected";
+            pill.innerHTML = '<div class="dot" style="background:#ef4444; box-shadow:none;"></div> Offline';
         }
     }
-    checkHealth();
+    init();
 
-    // --- Scanning Logic ---
-    async function scanText() {
+    // Scan Logic
+    async function runScan() {
         const text = document.getElementById('inputText').value;
         const btn = document.getElementById('scanBtn');
         
         if(!text.trim()) return;
-
+        
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESSING...';
 
         try {
-            const res = await fetch(`${API_URL}/scan`, {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
+            const res = await fetch(`${API}/scan`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({text})
             });
             const data = await res.json();
 
-            // Render Results
-            document.getElementById('resultBox').style.display = "block";
+            // Show Results
+            document.getElementById('results-area').style.display = 'block';
             
-            // Policy Badge
-            const pBadge = document.getElementById('res-policy');
-            pBadge.className = `badge ${data.policy}`;
-            
-            if(data.policy === "BLOCK") pBadge.innerText = "BLOCK TRANSACTION";
-            else if(data.policy === "WARN") pBadge.innerText = "WARNING";
-            else pBadge.innerText = "ALLOWED";
+            // 1. Update Badge
+            const badge = document.getElementById('res-policy');
+            badge.className = `badge ${data.policy}`;
+            badge.innerText = data.policy === "BLOCK" ? "THREAT BLOCKED" : (data.policy === "WARN" ? "WARNING" : "SAFE ALLOWED");
 
+            // 2. Update Details
             document.getElementById('res-class').innerText = data.class;
-            document.getElementById('res-conf').innerText = (data.confidence * 100).toFixed(0) + "%";
+            document.getElementById('res-conf').innerText = (data.confidence * 100).toFixed(1) + "%";
 
-            // Flags
+            // 3. Update Flags
             const setFlag = (id, active) => {
                 const el = document.getElementById(id);
-                el.className = active ? "flag active" : "flag";
+                el.className = active ? 'flag-pill active' : 'flag-pill';
             };
             setFlag('flag-email', data.flags.email);
             setFlag('flag-phone', data.flags.phone);
             setFlag('flag-addr', data.flags.address);
 
-            // Update Stats
-            stats.total++;
-            if(data.policy === "BLOCK") stats.block++;
-            else if(data.policy === "WARN") stats.warn++;
-            else stats.safe++;
-            
-            document.getElementById('count-total').innerText = stats.total;
-            document.getElementById('count-block').innerText = stats.block;
-            document.getElementById('count-warn').innerText = stats.warn;
-            document.getElementById('count-safe').innerText = stats.safe;
+            // 4. Update Stats & Gauge
+            updateStats(data.policy, data.confidence);
 
         } catch (e) {
-            alert("Connection Failed: Ensure api.py is running.");
+            console.error(e);
+            alert("Scan failed. Check API.");
         } finally {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-magnifying-glass"></i> Analyze Text';
+            btn.innerHTML = '<i class="fas fa-search"></i> ANALYZE TEXT';
         }
     }
 
-    // --- Analytics Tab Logic ---
+    // Stats & Gauge Logic
+    function updateStats(policy, confidence) {
+        stats.total++;
+        if(policy === 'BLOCK') stats.block++;
+        else if(policy === 'ALLOW') stats.safe++;
+
+        document.getElementById('stat-total').innerText = stats.total;
+        document.getElementById('stat-block').innerText = stats.block;
+        document.getElementById('stat-safe').innerText = stats.safe;
+
+        // Animate Gauge Needle
+        const needle = document.getElementById('gauge-needle');
+        const scoreDisplay = document.getElementById('risk-score-display');
+        
+        // Map confidence/policy to angle (-90deg to +90deg)
+        // High Risk (Red) = -90deg (Left)
+        // Low Risk (Green) = +90deg (Right)
+        
+        let angle = 90; // Default Safe (Green)
+        let score = 0;
+
+        if (policy === 'BLOCK') {
+            // High Risk -> Move to Red (Left side)
+            angle = -90 + (Math.random() * 20); // Random flutter in red zone
+            score = 800 + Math.floor(Math.random() * 200);
+        } else if (policy === 'WARN') {
+            // Med Risk -> Move to Yellow (Top/Center)
+            angle = 0 + (Math.random() * 20 - 10);
+            score = 400 + Math.floor(Math.random() * 200);
+        } else {
+            // Safe -> Move to Green (Right side)
+            angle = 90 - (Math.random() * 20);
+            score = Math.floor(Math.random() * 200);
+        }
+
+        needle.style.transform = `rotate(${angle}deg)`;
+        scoreDisplay.innerText = score;
+        
+        // Color code the score text
+        if(score > 700) scoreDisplay.style.color = '#ef4444';
+        else if(score > 300) scoreDisplay.style.color = '#f59e0b';
+        else scoreDisplay.style.color = '#10b981';
+    }
+
+    // Analytics Image Loader
     function loadShap(label, btn) {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
         const img = document.getElementById('shap-img');
         const loader = document.getElementById('loader');
-        const err = document.getElementById('error-msg');
+        const err = document.getElementById('err-msg');
 
         img.style.display = 'none';
         err.style.display = 'none';
         loader.style.display = 'block';
 
-        const src = `${API_URL}/shap-plot/${label}?t=${Date.now()}`;
+        const src = `${API}/shap-plot/${label}?t=${Date.now()}`;
         
         img.onload = () => {
             loader.style.display = 'none';
@@ -307,9 +596,9 @@
         img.src = src;
     }
     
-    // Preload
+    // Init
     loadShap('EMAIL', document.querySelector('.tab-btn'));
-</script>
 
+</script>
 </body>
 </html>
