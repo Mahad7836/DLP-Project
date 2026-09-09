@@ -1,0 +1,17 @@
+pandas
+numpy
+scipy
+scikit-learn
+xgboost
+shap
+phonenumbers
+joblib
+matplotlib
+seaborn
+pyyaml
+
+fastapi
+uvicorn
+python-multipart
+aiofiles
+jinja2
